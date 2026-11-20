@@ -43,3 +43,14 @@ Hiệu quả nhất: cùng một core cho game/headless; các case nhỏ bắt l
 - Bằng chứng: unit/regression +15case JSONL, toàn Đêm tất định; browser kiểm tra byte parity, campaign/retry/total, thanh dầu/blink/capacity, màu mắt/viền và reload setting, FPS từng Đêm. Scenario QA thắng nhanh được đánh dấu rõ trong spec; không giả làm video chơi cả Đêm.
 - Token/chi phí Phase3: không có API usage/billing; không báo con số tiêu thụ thật. Ước lượng chỉ dựa kích thước mã thay đổi (xem git diff/commit), không gồm reasoning/input/cache/tool; chi phí chưa có số liệu. Dùng chung core và chạy case nhỏ trước GUI để giảm vòng thử.
 - Retro: state và timer phải có test tại đúng tick chuyển. Chọn model số nguyên ngay từ đầu tránh lỗi ngưỡng; giữ ADR/test migration cạnh code giúp phân biệt hồi quy thật với luật đã bị thay. Cần người dùng chơi thử để review cảm giác và nghe âm thanh; test ẩn vẫn chưa truy cập.
+
+## Phase4 — Non-functional và release
+
+- Giữ coregameplay1.2; chỉ export PRNG cho soak/benchmark và tăngversion1.3. Case Phase3 đổi assertionversion, giữ toàn bộ luật;77test hiện chạy, khôngskip.
+- Soak thật:1Pythonprocess/1QuickJSContext,10Đêm seed7..16,0crash; RSS18.852→18.879MB,9.159s. Không lưu outputtừngtick nên không phình log/memory,không giả memorybằngheap.
+- Benchmark thật: cửa sổChrome không fullscreen1280×720,200Bóng wander/100motes/3đèn100dầu,normal-effects/camerachuan,3swarmup+30s. Rendererinstancing dùng chung cảgame/bench giữ cùnghình học/glow. Đo đầu163.55avg/36.04p1low; sau khi sửa chiều camera CCW, đo cuối160.14avg,95.37p1low,2.08sload; RSSwebnull giải thíchREADME. Số local không thaymáychấm.
+- Leaderboard atomicJSONđĩa, GUI/CLI chungfile; testqua restartserver/đọc lại vàexport. RemaptestbằnginputKeyJ thật, duplicate/reset/persistence; fontsize18/22.5,reducedflash,captions/edgearrow.
+- BrowserQA phát hiện header chồngsettings khi chữlớn; ẩnbrandmànphụ vàcho menu/settingscuộn. Điều này cầnxemảnh, không chỉassertfontsize. Cảnhbenchmark khôngthayđổi bởi fixlayoutmenuphụ.
+- Demo75giây: gameplay/input thật,accessibility,previewcảnhbenchmarkvànhãnrõ,sauđó lệnh unit/headless chạy thật vàreportbench/soak từđĩa. Capture6fps,encode24fps,khôngaudio. Không quay benchmarktiming đồngthờivideo.
+- Harness cập nhậtAGENTS/skill/verifier; thêmreleasegate đọcrawdt,soakRSS,77test,GUI,ZIPsạchvàffprobeMP4. Video/rootreports đượccommit;playerdata/Chromeprofile/tokens bị loại khỏiGitvàZIP.
+- Ước lượngtoken/chi phí: xemtoken-estimate.json, phương phápartifact-bytes/4 làproxy đượcgắnnhãn,actualusage/billingnull. Dùngcasegọn,sourcechung,khôngsinhảnh/assetngoài,khôngchạylạimởrộng khi khôngcóđổi/lỗi. Retro4phase ởdocs/retro.md.

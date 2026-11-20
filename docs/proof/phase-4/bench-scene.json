@@ -1,0 +1,44 @@
+{
+  "width": 1280,
+  "height": 720,
+  "shades": 200,
+  "motes": 100,
+  "states": [
+    "wander"
+  ],
+  "player": [
+    0,
+    0,
+    0
+  ],
+  "lamps": [
+    {
+      "id": "L1",
+      "lit": true,
+      "fuel": 100
+    },
+    {
+      "id": "L2",
+      "lit": true,
+      "fuel": 100
+    },
+    {
+      "id": "L3",
+      "lit": true,
+      "fuel": 100
+    },
+    {
+      "id": "L4",
+      "lit": false,
+      "fuel": 0
+    },
+    {
+      "id": "L5",
+      "lit": false,
+      "fuel": 0
+    }
+  ],
+  "input_disabled": true,
+  "warmup_s": 3,
+  "duration_s": 30
+}

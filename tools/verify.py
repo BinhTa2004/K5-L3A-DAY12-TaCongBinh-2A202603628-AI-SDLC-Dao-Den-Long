@@ -15,7 +15,7 @@ from headless import simulate
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--phase', choices=['phase-1', 'phase-2', 'phase-3'], required=True)
+    parser.add_argument('--phase', choices=['phase-1', 'phase-2', 'phase-3', 'phase-4'], required=True)
     args = parser.parse_args()
     destination = ROOT / 'docs/proof' / args.phase
     destination.mkdir(parents=True, exist_ok=True)
@@ -24,9 +24,9 @@ def main():
     contract = json.loads((ROOT / 'game.contract.json').read_text())
     samples = []
     feature_checks = []
-    if args.phase in ['phase-2','phase-3']:
+    if args.phase in ['phase-2','phase-3','phase-4']:
         cases=json.loads((ROOT/'tests/scenarios/features.json').read_text())
-        if args.phase=='phase-3':cases+=json.loads((ROOT/'tests/scenarios/fuel.json').read_text())
+        if args.phase in ['phase-3','phase-4']:cases+=json.loads((ROOT/'tests/scenarios/fuel.json').read_text())
         for case in cases:
             options = dict(contract=contract, seed=2026, night=case['night'], ticks=case['ticks'],
                            snapshotEvery=1, scenario=case['scenario'], inputs=case['inputs'])
@@ -72,6 +72,13 @@ def main():
         contract_sha256=hashlib.sha256((ROOT/'game.contract.json').read_text(encoding='utf-8').encode()).hexdigest(),
         tests_exit_code=process.returncode, headless=samples, features=feature_checks)
     report['passed'] = process.returncode == 0 and all(s['deterministic'] and s['elapsed_seconds'] <= 30 for s in samples) and all(c['passed'] for c in feature_checks)
+    if args.phase=='phase-4':
+        bench=json.loads((ROOT/'bench.json').read_text())
+        soak=json.loads((ROOT/'soak.json').read_text())
+        report['release_measurements']={
+            'benchmark':bench['avg_fps']>=60 and bench['p1_low_fps']>=30 and bench['load_ms']<=10000,
+            'soak':soak['nights']==10 and soak['crashes']==0 and soak['mem_end_mb']<=1.2*soak['mem_start_mb']}
+        report['passed']=report['passed'] and all(report['release_measurements'].values())
     (destination / 'report.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
     print(process.stdout + process.stderr)
     print(json.dumps(report, indent=2))

@@ -1,0 +1,28 @@
+{
+  "method": "Authored source/docs bytes divided by4; cumulative artifact proxy only, excludes vendor, original requirements, evidence, reasoning, input, retry and cache.",
+  "actual_total_tokens": null,
+  "actual_cost": null,
+  "currency": null,
+  "samples": [
+    {
+      "phase": "phase-1",
+      "artifact_bytes": 62041,
+      "artifact_token_proxy": 15510
+    },
+    {
+      "phase": "phase-2",
+      "artifact_bytes": 113994,
+      "artifact_token_proxy": 28498
+    },
+    {
+      "phase": "phase-3",
+      "artifact_bytes": 154784,
+      "artifact_token_proxy": 38696
+    },
+    {
+      "phase": "phase-4",
+      "artifact_bytes": 227707,
+      "artifact_token_proxy": 56927
+    }
+  ]
+}

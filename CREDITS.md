@@ -6,3 +6,5 @@
 - QuickJS Python binding 1.19.4: https://github.com/PetterS/quickjs — MIT; QuickJS engine: https://bellard.org/quickjs/ — MIT. Cài qua requirements.txt, không đóng gói thư viện vào repo.
 - Font: font hệ thống và Georgia/Times New Roman có sẵn trên máy, không phân phối file font.
 - Browser QA tùy chọn: websocket-client 1.8.0 (Apache-2.0), https://github.com/websocket-client/websocket-client; Chrome/ANGLE dùng bản cài trên máy, không phân phối trong build.
+- Soak RSS: psutil7.2.2 (BSD-3-Clause), https://github.com/giampaolo/psutil. Benchmark dùng Chrome đã cài, tùy chọn CHROME_BIN; không phân phối trình duyệt.
+- Video: frame game/các lệnh thật thu bằng Chrome DevTools Protocol, mã hóa FFmpeg/libx264 từ bản cài trên máy; không phân phối FFmpeg trong game. Không có nhạc/ảnh/video của bên thứ ba.

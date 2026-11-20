@@ -27,7 +27,7 @@ def main():
     if not chrome:
         raise RuntimeError('Set CHROME_BIN to a Chrome executable')
     flags = dict(creationflags=subprocess.CREATE_NO_WINDOW) if os.name == 'nt' else {}
-    server = subprocess.Popen([sys.executable, str(ROOT/'tools/serve.py'), '--port', '8012'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, **flags)
+    server = subprocess.Popen([sys.executable, str(ROOT/'tools/serve.py'), '--port', '8012', '--data-dir', str(profile/'leaderboard-store')], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, **flags)
     graphics = ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] if args.software else ['--enable-gpu-rasterization']
     browser = subprocess.Popen([chrome, '--headless=new', '--no-first-run', '--no-default-browser-check', '--no-proxy-server', '--remote-debugging-port=9232', '--remote-allow-origins=*', *graphics, '--window-size=1280,720', '--user-data-dir='+str(profile), 'about:blank'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, **flags)
     ws = None
@@ -76,6 +76,10 @@ def main():
         call('Emulation.setDeviceMetricsOverride', {'width': 1280, 'height': 720, 'deviceScaleFactor': 1, 'mobile': False})
         call('Page.navigate', {'url': 'http://127.0.0.1:8012/'})
         wait('!!window.__game')
+        if args.phase=='phase-4':
+            evaluate("document.getElementById('reset-keys').click()")
+            evaluate("const e=document.getElementById('large-text');e.checked=false;e.dispatchEvent(new Event('change'))")
+            assert evaluate("parseFloat(getComputedStyle(document.documentElement).fontSize)")==18
         screenshot('menu')
         evaluate("document.getElementById('start').click()")
         assert evaluate('__game.screen') == 'intro'
@@ -98,7 +102,7 @@ def main():
         fps = evaluate('new Promise(resolve=>{let n=0,start=performance.now();function sample(now){n++;if(now-start>=3000)resolve(n*1000/(now-start));else requestAnimationFrame(sample)}requestAnimationFrame(sample)})')
         checks = {}
         per_night = [{'night': 1, 'average_fps': fps}]
-        if args.phase in ['phase-2','phase-3']:
+        if args.phase in ['phase-2','phase-3','phase-4']:
             sys.path.insert(0, str(ROOT/'tools'))
             from headless import simulate
             contract = json.loads((ROOT/'game.contract.json').read_text())
@@ -128,7 +132,7 @@ def main():
                 scenario = dict(random_motes=False, random_shades=False, random_drifters=False,
                                 wind_enabled=False, player={'pos': [0, 6, 6] if n==3 else [0,0,25 if n==1 else 20], 'carried': 10},
                                 lanterns=lanterns)
-                if args.phase=='phase-3':scenario['time_left_s']=1/60
+                if args.phase in ['phase-3','phase-4']:scenario['time_left_s']=1/60
                 evaluate('__game.loadScenario('+str(n)+','+json.dumps(scenario)+')')
                 call('Input.dispatchKeyEvent', {'type': 'keyDown', 'code': 'KeyE', 'key': 'e'})
                 wait("__game.screen === 'result'")
@@ -150,7 +154,7 @@ def main():
             assert evaluate('__game.screen') == 'intro'
             assert evaluate('__game.game.night') == 2
             checks['loss_retries_same_night'] = True
-            if args.phase=='phase-3':
+            if args.phase in ['phase-3','phase-4']:
                 # Actual renderer checks, including a low lamp whose rounded fuel could read30.0.
                 scene = dict(random_motes=False,random_shades=False,random_drifters=False,time_left_s=20,
                     player={'successful_lights':5,'carried':14},
@@ -161,8 +165,8 @@ def main():
                 evaluate("__game.show('pause');document.getElementById('pause-settings').click();const cb=document.getElementById('colorblind');cb.checked=true;cb.dispatchEvent(new Event('change'))")
                 evaluate("new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))")
                 assert evaluate("document.body.classList.contains('colorblind')")
-                assert evaluate("__game.visuals.meshes.get('shade:S1').children[2].material.color.getHex()") == 0x00B3FF
-                assert evaluate("__game.visuals.meshes.get('shade:S1').children[1].material.color.getHex()") == 0x00B3FF
+                assert evaluate("__game.visuals.batches.eyes.material.color.getHex()") == 0x00B3FF
+                assert evaluate("__game.visuals.batches.shadeGlow.material.color.getHex()") == 0x00B3FF
                 assert evaluate("getComputedStyle(document.body).getPropertyValue('--danger').trim()") == '#FFFFFF'
                 assert evaluate("getComputedStyle(document.getElementById('clock').parentElement,'::before').content.includes('⚠')")
                 assert evaluate("__game.visuals.meshes.get('lantern:L2').userData.body.scale.y") == .8
@@ -192,11 +196,93 @@ def main():
             wait('!!window.__game')
             assert evaluate('__game.settings.volume') == .31
             assert evaluate('__game.settings.sensitivity') == 1.4
-            if args.phase=='phase-3':
+            if args.phase in ['phase-3','phase-4']:
                 assert evaluate('__game.settings.colorblind') is True
                 assert evaluate("document.getElementById('colorblind').checked")
                 checks['colorblind_survives_reload']=True
             checks['settings_survive_reload'] = True
+            if args.phase=='phase-4':
+                evaluate("document.getElementById('menu-settings').click();document.querySelector('[data-action=jump]').click()")
+                call('Input.dispatchKeyEvent',{'type':'keyDown','code':'KeyJ','key':'j'})
+                call('Input.dispatchKeyEvent',{'type':'keyUp','code':'KeyJ','key':'j'})
+                assert evaluate('__game.settings.bindings.jump')=='KeyJ'
+                evaluate("document.querySelector('[data-action=jump]').click()")
+                call('Input.dispatchKeyEvent',{'type':'keyDown','code':'KeyW','key':'w'})
+                call('Input.dispatchKeyEvent',{'type':'keyUp','code':'KeyW','key':'w'})
+                assert evaluate('__game.settings.bindings.jump')=='KeyJ'
+                assert evaluate("document.getElementById('key-error').textContent.includes('đã dùng')")
+                evaluate("document.getElementById('reset-keys').click()")
+                assert evaluate('__game.settings.bindings.jump')=='Space'
+                evaluate("document.querySelector('[data-action=jump]').click()")
+                call('Input.dispatchKeyEvent',{'type':'keyDown','code':'KeyJ','key':'j'})
+                call('Input.dispatchKeyEvent',{'type':'keyUp','code':'KeyJ','key':'j'})
+                evaluate("for(const id of ['reduced-motion','large-text']){const e=document.getElementById(id);e.checked=true;e.dispatchEvent(new Event('change'))}")
+                screenshot('accessibility-settings')
+                call('Page.reload');wait('!!window.__game')
+                assert evaluate('__game.settings.bindings.jump')=='KeyJ'
+                assert evaluate('__game.settings.reducedMotion && __game.settings.largeText')
+                assert evaluate("parseFloat(getComputedStyle(document.documentElement).fontSize)")==22.5
+                evaluate("document.getElementById('start').click();document.getElementById('enter').click()")
+                call('Input.dispatchKeyEvent',{'type':'keyDown','code':'Space','key':' '})
+                time.sleep(.15)
+                call('Input.dispatchKeyEvent',{'type':'keyUp','code':'Space','key':' '})
+                assert evaluate('__game.game.player.pos[1]')==0
+                call('Input.dispatchKeyEvent',{'type':'keyDown','code':'KeyJ','key':'j'})
+                time.sleep(.15)
+                assert evaluate('__game.game.player.pos[1]')>0
+                call('Input.dispatchKeyEvent',{'type':'keyUp','code':'KeyJ','key':'j'})
+                font_errors=evaluate("[...document.querySelectorAll('body *')].filter(e=>e.children.length===0&&e.textContent.trim()&&e.getClientRects().length&&parseFloat(getComputedStyle(e).fontSize)<18).map(e=>({tag:e.tagName,id:e.id,size:getComputedStyle(e).fontSize}))")
+                assert not font_errors,font_errors
+                checks['remapping_conflicts_restore_persistence_and_actual_jump']=True
+                checks['ui_minimum_18px_large_125_percent']=True
+                notices=dict(random_motes=False,random_shades=True,random_drifters=False,player={'invuln_ticks':10000},time_left_s=10,
+                    lanterns=[{'id':'L1','lit':True,'fuel':20}])
+                evaluate('__game.loadScenario(1,'+json.dumps(notices)+');for(let i=0;i<299;i++)__game.game.step({})')
+                wait("!document.getElementById('shade-warning').hidden")
+                assert evaluate("document.getElementById('subtitles').textContent.includes('Đèn ít dầu')")
+                assert evaluate("document.getElementById('subtitles').textContent.includes('giây')")
+                screenshot('visual-warnings')
+                hit=dict(random_motes=False,random_shades=False,random_drifters=False,shades=[{'pos':[0,0,0]}])
+                evaluate('__game.loadScenario(1,'+json.dumps(hit)+')')
+                wait('__game.game.player.flames === 2')
+                assert not evaluate("document.body.classList.contains('hit')")
+                wind=dict(random_motes=False,random_shades=False,random_drifters=False,wind_enabled=True)
+                evaluate('__game.loadScenario(3,'+json.dumps(wind)+');for(let i=0;i<1679;i++)__game.game.step({})')
+                wait("document.getElementById('subtitles').textContent.includes('gió sắp thổi')")
+                checks['spawn_edge_arrow_countdown_low_fuel_wind_captions_reduced_flash']=True
+                # A genuine win in Night1, then a loss in Night2: save only the won-night score.
+                evaluate("__game.show('menu');document.getElementById('start').click();document.getElementById('enter').click()")
+                win=dict(random_motes=False,random_shades=False,random_drifters=False,time_left_s=1/60,
+                    lanterns=[{'id':'L'+str(i),'lit':True,'fuel':60} for i in range(1,4)])
+                evaluate('__game.loadScenario(1,'+json.dumps(win)+')')
+                wait("__game.screen==='result'")
+                expected=evaluate('__game.game.score')
+                assert evaluate("document.getElementById('save-score').hidden")
+                evaluate("document.getElementById('next').click();document.getElementById('enter').click()")
+                hit['player']={'flames':1}
+                evaluate('__game.loadScenario(2,'+json.dumps(hit)+')')
+                wait("__game.screen==='result'")
+                assert not evaluate("document.getElementById('save-score').hidden")
+                evaluate("document.getElementById('player-name').value='QA_release';document.getElementById('save-score').requestSubmit()")
+                wait("document.getElementById('score-status').textContent.includes('Đã lưu')")
+                entries=evaluate("fetch('/api/leaderboard').then(r=>r.json()).then(d=>d.entries)")
+                saved=next(e for e in entries if e['name']=='QA_release')
+                assert saved['score']==expected and saved['nights_won']==1 and saved['seed']==2026
+                export=ROOT/'artifacts/qa-leaderboard.json'
+                p=subprocess.run([sys.executable,str(ROOT/'tools/serve.py'),'--data-dir',str(profile/'leaderboard-store'),'--export-leaderboard',str(export)],capture_output=True)
+                assert p.returncode==0,p.stderr
+                assert json.loads(export.read_text())['entries']==entries
+                server.terminate();server.wait(timeout=10)
+                server=subprocess.Popen([sys.executable,str(ROOT/'tools/serve.py'),'--port','8012','--data-dir',str(profile/'leaderboard-store')],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,**flags)
+                for _ in range(100):
+                    try:
+                        opener.open('http://127.0.0.1:8012/',timeout=1).close();break
+                    except OSError:time.sleep(.05)
+                call('Page.reload');wait('!!window.__game')
+                evaluate("document.getElementById('menu-leaderboard').click()")
+                wait("document.getElementById('leaderboard-body').textContent.includes('QA_release')")
+                screenshot('leaderboard')
+                checks['leaderboard_won_score_disk_restart_and_cli_export']=True
         gpu = evaluate("(()=>{const gl=__game.renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info');return ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER)})()")
         report = {'viewport': [1280, 720], 'renderer': gpu,
                   'average_fps': fps, 'movement': True, 'pause': True, 'runtime_errors': errors,

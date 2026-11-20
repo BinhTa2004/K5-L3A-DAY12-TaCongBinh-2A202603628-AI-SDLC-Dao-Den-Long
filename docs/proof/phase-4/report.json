@@ -1,0 +1,113 @@
+{
+  "phase": "phase-4",
+  "platform": "Windows-10-10.0.19045-SP0",
+  "python": "3.12.9",
+  "core_sha256": "9e24877f5d621679d4300bfd552b4eeee211618bc4d1f6821d9c645c40b79754",
+  "contract_sha256": "2a249c87f858051b8cca72b8dd343829df6738b09c4b34dc183621fb2df2a24f",
+  "tests_exit_code": 0,
+  "headless": [
+    {
+      "night": 1,
+      "elapsed_seconds": 3.572964899998624,
+      "deterministic": true,
+      "sha256": "747c669f825f3d450c34e5a2f3fefd955a6fa25439a2d24f3a16957e2d5fef89",
+      "end": {
+        "type": "end",
+        "ticks": 14400,
+        "state": "lost",
+        "score": 0
+      }
+    },
+    {
+      "night": 2,
+      "elapsed_seconds": 5.660531600002287,
+      "deterministic": true,
+      "sha256": "fb117ffa4ea0d6a013b09f047716aa1ebe6d8cd1c0a9d14717d986a365a2ecea",
+      "end": {
+        "type": "end",
+        "ticks": 16200,
+        "state": "lost",
+        "score": 0
+      }
+    },
+    {
+      "night": 3,
+      "elapsed_seconds": 14.364657900001475,
+      "deterministic": true,
+      "sha256": "01e11ff31387f672175e3e13f33af420d7355a5a5be9c73e31cf21d778118cdf",
+      "end": {
+        "type": "end",
+        "ticks": 18000,
+        "state": "lost",
+        "score": 0
+      }
+    }
+  ],
+  "features": [
+    {
+      "name": "dash",
+      "passed": true
+    },
+    {
+      "name": "charm",
+      "passed": true
+    },
+    {
+      "name": "drifter-steal",
+      "passed": true
+    },
+    {
+      "name": "drifter-drop",
+      "passed": true
+    },
+    {
+      "name": "pause",
+      "passed": true
+    },
+    {
+      "name": "launch-pad",
+      "passed": true
+    },
+    {
+      "name": "wind",
+      "passed": true
+    },
+    {
+      "name": "fall-respawn",
+      "passed": true
+    },
+    {
+      "name": "fuel-out",
+      "passed": true
+    },
+    {
+      "name": "relight",
+      "passed": true
+    },
+    {
+      "name": "refuel",
+      "passed": true
+    },
+    {
+      "name": "drain-stack",
+      "passed": true
+    },
+    {
+      "name": "dawn-survival",
+      "passed": true
+    },
+    {
+      "name": "no-early-win",
+      "passed": true
+    },
+    {
+      "name": "capacity-growth",
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "release_measurements": {
+    "benchmark": true,
+    "soak": true
+  }
+}

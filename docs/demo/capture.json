@@ -1,0 +1,18 @@
+{
+  "duration_s": 75.0,
+  "bytes": 2093661,
+  "capture_fps": 6,
+  "encoded_fps": 24,
+  "frames": 450,
+  "parts": [
+    "menu",
+    "live keyboard gameplay",
+    "accessibility",
+    "standard benchmark scene preview",
+    "actual unit test execution",
+    "actual headless execution",
+    "actual benchmark/soak reports and harness"
+  ],
+  "audio": false,
+  "note": "Real timed Chrome frames; actual commands, seeded QA benchmark preview; benchmark timing was measured separately."
+}

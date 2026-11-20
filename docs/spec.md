@@ -79,3 +79,27 @@ Phần Phase1/2 phía trên mô tả các phiên bản lịch sử. Luật hiệ
 Tái lập: `python tools/verify.py --phase phase-3`, `python tools/browser_check.py --phase phase-3`. Verifier chạy mọi test và15 case headless, sinh report/hash/log. Benchmark đủ14400/16200/18000tick với bản đồ và spawn thực, đặt invuln trong scenario để phép đo không dừng sớm vì bị đánh. Browser QA thắng nhanh dùng time_left_s1/60 theo scenario để kiểm tra chuyển Đêm, không phải lượt chơi toàn Đêm.
 
 Các bằng chứng thật trong docs/proof/phase-3. Tag/evidence cũ giữ nguyên. Chưa được chạy test ẩn; không suy ra mọi test ẩn đã đạt từ test tự viết.
+
+# Phase4 — phát hành có số đo / Contract1.3
+
+Nguồn [Ticket-04](requirements/phase-4.md). Mọi luật gameplay1.2 tiếp tục chạy; thay đổi version assertion chỉ xác nhận schema1.3, không bỏ regression.
+
+| Yêu cầu | Acceptance criteria | Bằng chứng |
+|---|---|---|
+| Benchmark |1280×720,200wander/100motes/3đèn100fuel,input/timers/damage/spawn/outcome tắt; camera30m/Y15/15s;3s warmup,30sđo | bench.json,bench-scene.json,rawbench-frames.json,unit scene/frozen rules |
+| Công thức metrics | avg1000N/sumdt; kceil1%,worstmean,p95nearest-rank; loadfirstGPUframe | tools/bench.py + known-frame unit,releasegate recalculatesraw |
+| Soak |10Đêm liên tiếp1process/1Context; seed7..16; randominput đúng xác suất; RSSsau load/reset | soak.json,tools/soak.py;0crash/RSS≤120% |
+| Leaderboard | TênASCII3–12,score chỉ Đêm thắng,nights0–3,UTCISO+timezone,seed;top10/earlier tie; đĩa vàCLI chungfile | unitvalidation/top10/tie; browser save477điểm Đêm1 rồi thuaĐêm2; restart server và export so đúngentries |
+| Remapping |9actions,lưu,phím trùng không được gán,reset; KeyJnhảy thật và Space cũ không nhảy | browser check + pure binding unit |
+| Dễ tiếp cận | captions4nhóm,spawnarrowmép;reduce toànmànhitflash/camera khôngrung;18px/22.5px | browser.spawn/caption/reduced/font checks + screenshots |
+| Đóng gói | Clone sạch2lệnh chơi; runtimeZIPkhôngdata/token,asset đầyđủ;headlessđộc lập | package.json + fresh extraction |
+| Tài liệu/demo | READMEfull,CHANGELOG4phase,CREDITS,LICENSE,retro,MP4<300s | docs/demo/demo.mp475s,capture.json,releasegateffprobe |
+| Bàn giao | phase-4 vàv1.0.0 cùngcommit,release cóZIP/MP4/bench/soak,repo public | publish_release.py kiểmtra tag/head,GitHubreceipt và readback sau xuất |
+
+Benchmark dùng module src/benchmark.js chỉ trong mode riêng; không gọi normalGame.step nên các luật bị tắt không chạy nhầm. Vẫn dùng moveShade/safezone chuẩn và giữ wander thay vì chuyển chase; target là đèn tắt theo Phase3. Renderer batch dùng cùng sphere/eyes/glow trong cả hai mode; không giảm hiệu ứng riêng khi đo. Nhân vật/địch sáng tạo thêm không tồn tại trong mode này và headless.
+
+Leaderboards ghiatomic qua tools/leaderboard.py và lưu artifacts/user-data mặc định. Không ghi vào localStorage để CLI đọc cùng dữ liệu; localStorage chỉ lưu settings. Thời điểm luôn do server tạoUTC microseconds, không tin timestamp từclient. Endpoint local chặn path traversal và request ghi cross-origin; không public server ra mạng.
+
+Browser caps rAF khi chơi thường; launcher bench tắt frame-rate-limit/gpu-vsync, đo riêng với quayvideo tắt. load_ms tính từ lúc CLI chạy tới khi frame đầu hoàn tất gl.finish; RSSwebnull được giải thích README. Ngưỡng chính thức thuộc máy giảng viên.
+
+Tái lập `python tools/verify.py --phase phase-4`, `python tools/browser_check.py --phase phase-4`, bench vàsoak theo contract. tools/release_gate.py kiểmtra rawmetrics,77test/headless,GUI,demo/ZIP vàtài liệu trước tag/publish. Video là frame Chrome theo thời gian thật; lệnh test/headless chạy thật trong video, benchmark preview cónhãn và kết quả đo riêng. Không gọi video đó là chơi trọn ba Đêm.

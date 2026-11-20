@@ -3,16 +3,19 @@ name: verify-game
 description: Run deterministic headless regression and capture reproducible evidence for a Lantern Island phase before tagging it.
 ---
 
-Run `python tools/verify.py --phase phase-3` from the repo root.
+Run `python tools/verify.py --phase phase-4` from the repo root.
 The command must return zero before declaring verification passed or creating a phase tag.
-Read `docs/proof/phase-3/report.json` and the test log; do not hand-edit outputs.
+Read `docs/proof/phase-4/report.json` and the test log; do not hand-edit outputs.
 Inspect the browser at 1280x720 for camera, HUD, restart and the character's hat.
 Store screenshots separately from headless evidence. Report browser checks as pending if unavailable.
 When changing a game rule, add a scenario that observes its consequence; run regression again.
 
 Phase 2: inspect feature outputs (dash, charm, drifter theft/drop, pause, pad, wind, respawn).
-Run python tools/browser_check.py --phase phase-3 after UI changes; verify campaign, persistent settings and real FPS at 1280x720.
+Run python tools/browser_check.py --phase phase-4 after UI changes; verify campaign, persistent settings and real FPS at 1280x720.
 Keep Phase 1 evidence unchanged; report measured GPU and per-night FPS rather than assuming performance.
 
 Phase 3: inspect oil decay/refuel/relight, stacked drain, threshold30, dawn outcome and capacity fixtures. Check ADR/CHANGELOG for replaced assertions; no silent regression skips.
 Browser checks must inspect fuel bars/blink, collapsed torn paper and cyan eyes/rim plus white warning in the saved colorblind setting. Preserve all earlier evidence.
+
+Phase 4 release gate: run the actual 30s standard benchmark and ten-night single-process soak; retain root bench.json/soak.json and raw frame timings. Test persistence via server restart and CLI export. Inspect all remapped actions, conflict detection, reduced flash, captions and >=18px fonts.
+Package from verified sources, run clean extraction checks, record a real gameplay/evidence MP4 under5min. Publish only the intended version/tag/assets and keep secrets out of output.

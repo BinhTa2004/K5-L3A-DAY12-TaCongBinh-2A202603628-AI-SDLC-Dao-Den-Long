@@ -1,0 +1,50 @@
+{
+  "viewport": [
+    1280,
+    720
+  ],
+  "renderer": "ANGLE (Intel, Intel(R) HD Graphics 630 (0x0000591B) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "average_fps": 60.22693241933268,
+  "movement": true,
+  "pause": true,
+  "runtime_errors": [],
+  "checks": {
+    "browser_headless_byte_parity": true,
+    "three_night_campaign_and_total": true,
+    "loss_retries_same_night": true,
+    "extinction_reduces_ambient_light": true,
+    "fuel_bars_blink_collapsed_torn_paper_dynamic_capacity": true,
+    "colorblind_cyan_eyes_rim_white_warning": true,
+    "colorblind_survives_reload": true,
+    "settings_survive_reload": true,
+    "remapping_conflicts_restore_persistence_and_actual_jump": true,
+    "ui_minimum_18px_large_125_percent": true,
+    "spawn_edge_arrow_countdown_low_fuel_wind_captions_reduced_flash": true,
+    "leaderboard_won_score_disk_restart_and_cli_export": true
+  },
+  "per_night": [
+    {
+      "night": 1,
+      "average_fps": 60.22693241933268
+    },
+    {
+      "night": 1,
+      "average_fps": 60.18287614297589,
+      "max_shades": 6,
+      "drifters": 0
+    },
+    {
+      "night": 2,
+      "average_fps": 60.158872602785245,
+      "max_shades": 8,
+      "drifters": 2
+    },
+    {
+      "night": 3,
+      "average_fps": 60.24096385540676,
+      "max_shades": 10,
+      "drifters": 2
+    }
+  ],
+  "note": "Measured with requestAnimationFrame on this machine; grading hardware may differ."
+}

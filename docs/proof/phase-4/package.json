@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "fresh_extraction": true,
+  "headless_cli": true,
+  "static_assets": true,
+  "leaderboard_export": true,
+  "archive_sha256": "2f511fedd2a64b0b4004f6e7e5f58cd9057482bb396690bce7d1c9b66b0d45b6",
+  "bytes": 300733
+}

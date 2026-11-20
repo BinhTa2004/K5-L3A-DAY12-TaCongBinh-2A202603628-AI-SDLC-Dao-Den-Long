@@ -13,9 +13,9 @@ from zipfile import ZipFile
 ROOT = Path(__file__).resolve().parents[1]
 if __name__ == '__main__':
     parser=argparse.ArgumentParser()
-    parser.add_argument('--phase',choices=['phase-2','phase-3'],default='phase-3')
+    parser.add_argument('--phase',choices=['phase-2','phase-3','phase-4'],default='phase-4')
     phase=parser.parse_args().phase
-    archive = ROOT/'artifacts'/('dao-den-long-'+phase+'.zip')
+    archive = ROOT/'artifacts'/('dao-den-long-v1.0.0.zip' if phase=='phase-4' else 'dao-den-long-'+phase+'.zip')
     clean = ROOT/'artifacts'/('clean-'+str(uuid4()))
     clean.mkdir()
     with ZipFile(archive) as z:
@@ -42,7 +42,15 @@ if __name__ == '__main__':
         assert b'game.js' in response.read()
         for path in ['/src/core.js', '/vendor/three.module.js', '/web/game.js', '/game.contract.json']:
             assert opener.open('http://127.0.0.1:8013'+path).status == 200
-        report = dict(passed=True, fresh_extraction=True, headless_cli=True, static_assets=True,
+        if phase=='phase-4':
+            assert json.load(opener.open('http://127.0.0.1:8013/api/leaderboard'))=={'entries':[]}
+            value=dict(name='PackUser',score=477,nights_won=1,seed=42)
+            request=urllib.request.Request('http://127.0.0.1:8013/api/leaderboard',data=json.dumps(value).encode(),headers={'Content-Type':'application/json'})
+            entries=json.load(opener.open(request))['entries']
+            exported=clean/'exported.json'
+            subprocess.run([sys.executable,'tools/serve.py','--export-leaderboard',str(exported)],cwd=clean,capture_output=True,check=True)
+            assert json.loads(exported.read_text())['entries']==entries
+        report = dict(passed=True, fresh_extraction=True, headless_cli=True, static_assets=True,leaderboard_export=phase=='phase-4',
                       archive_sha256=hashlib.sha256(archive.read_bytes()).hexdigest(), bytes=archive.stat().st_size)
         (ROOT/'docs/proof'/phase/'package.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
         print(json.dumps(report, indent=2))

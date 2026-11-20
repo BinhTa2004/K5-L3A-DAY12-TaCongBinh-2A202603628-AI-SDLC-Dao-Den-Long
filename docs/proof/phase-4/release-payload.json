@@ -1,0 +1,31 @@
+{
+  "repository": "https://github.com/BinhTa2004/K5-L3A-DAY12-TaCongBinh-2A202603628-AI-SDLC-Dao-Den-Long",
+  "tags": [
+    "phase-4",
+    "v1.0.0"
+  ],
+  "release": "v1.0.0",
+  "assets": [
+    {
+      "name": "dao-den-long-v1.0.0.zip",
+      "bytes": 300733,
+      "sha256": "2f511fedd2a64b0b4004f6e7e5f58cd9057482bb396690bce7d1c9b66b0d45b6"
+    },
+    {
+      "name": "demo.mp4",
+      "bytes": 2093661,
+      "sha256": "7bbf8be8ef0902a069734c84f2de25c0363cd44f757974c9e768f604077fe1bf"
+    },
+    {
+      "name": "bench.json",
+      "bytes": 418,
+      "sha256": "cbf03fadd15972d26a15b46808f50fdcc981619eb952c417a7758931b7802143"
+    },
+    {
+      "name": "soak.json",
+      "bytes": 264,
+      "sha256": "e9ccf9050bf71db7b412e641874c45b8d393aa87b85cc8d58528654e797e0571"
+    }
+  ],
+  "state": "prepared locally; publication requires approval"
+}

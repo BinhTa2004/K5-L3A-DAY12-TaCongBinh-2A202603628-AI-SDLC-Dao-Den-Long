@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "checks": {
+    "contract_1_3": true,
+    "regression_and_headless": true,
+    "evidence_matches_core": true,
+    "gui_all_checks": true,
+    "benchmark_thresholds": true,
+    "benchmark_raw_recalculates": true,
+    "soak_thresholds": true,
+    "clean_package": true,
+    "video_under_5_min": true,
+    "required_documents": true,
+    "no_private_runtime_data": true,
+    "runtime_modules": true
+  },
+  "video_duration_s": 75.0,
+  "archive_sha256": "2f511fedd2a64b0b4004f6e7e5f58cd9057482bb396690bce7d1c9b66b0d45b6",
+  "video_sha256": "7bbf8be8ef0902a069734c84f2de25c0363cd44f757974c9e768f604077fe1bf"
+}

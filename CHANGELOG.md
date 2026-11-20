@@ -1,5 +1,14 @@
 # Changelog
 
+## Phase4 — v1.0.0 / Contract1.3
+
+- Giữ mọi luật1.2; thêm bench_cmd/soak_cmd. Benchmark đúng200Bóng/100motes/3đèn, camera30m/15m, warmup3s và rawframe metrics. Soak10nights cùng tiến trình/context, RSS thật.
+- Renderer instancing dùng chung cho gameplay/benchmark, giữ sphere/eyes/glow, giảm drawcall ở cảnh nhiều thực thể.
+- Bảng xếp hạng đĩa top10, tên hợp lệ, thời gian UTC ISO, điểm chỉ từ Đêm thắng; GUI/save/menu và CLIexport chung file.
+- Remap9actions, báo trùng/reset/lưu; reduced motion,18px tối thiểu/125%, captions và edge-arrow. Lưu cài đặt qua reload.
+- Đóng gói web local, README≤3lệnh, kiểm tra ZIP sạch, retro và video thật dưới5phút. Chuẩn bị tagphase-4 và Releasev1.0.0.
+- Testmigration: PhaseThree version assertion1.2→1.3, các luật fuel/score/dawn giữ nguyên. Browser assertion màu đọc vật liệu batch thay childmesh cũ; không bỏ kiểm tra kết quả. Bổ sung7unit tests release và UI kiểm tra persistence/export/remap/caption/font.
+
 ## Phase3 — Contract1.2 — breaking changes
 
 - Đèn sáng không còn vĩnh viễn: thêm dầu, châm dầu, tắt và thắp lại; tương tác chọn cả đèn sáng nhận được dầu. Ngưỡng dầu30 quyết định vùng an toàn.
