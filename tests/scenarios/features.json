@@ -1,0 +1,10 @@
+[
+  {"name":"dash","night":1,"ticks":13,"scenario":{"random_motes":false,"random_shades":false},"inputs":{"frames":[{"tick":0,"dash":true}]},"events":["dash"]},
+  {"name":"charm","night":2,"ticks":60,"scenario":{"random_motes":false,"random_shades":false,"random_drifters":false,"player":{"pos":[35,0,0]}},"inputs":{"frames":[{"tick":1,"dash":true},{"tick":2,"dash":false},{"tick":14,"dash":true}]},"events":["charm_picked","dash"]},
+  {"name":"drifter-steal","night":2,"ticks":30,"scenario":{"random_motes":false,"random_shades":false,"random_drifters":false,"player":{"carried":10},"drifters":[{"id":"D1","pos":[0,0,0],"state":"chase"}]},"inputs":{"frames":[]},"events":["drifter_steal"]},
+  {"name":"drifter-drop","night":2,"ticks":121,"scenario":{"random_motes":false,"random_shades":false,"random_drifters":false,"player":{"carried":10},"drifters":[{"id":"D1","pos":[2,0,0],"state":"flee","stolen":3,"state_ticks_left":240}]},"inputs":{"frames":[{"tick":0,"pulse":true}]},"events":["pulse","drifter_drop"]},
+  {"name":"pause","night":1,"ticks":60,"scenario":{"random_motes":false,"random_shades":false},"inputs":{"frames":[{"tick":0,"move":[0,1]},{"tick":10,"pause":true},{"tick":11,"pause":false},{"tick":40,"pause":true}]},"events":["paused","resumed"]},
+  {"name":"launch-pad","night":2,"ticks":84,"scenario":{"random_motes":false,"random_shades":false,"random_drifters":false,"player":{"pos":[20,0,18]}},"inputs":{"frames":[{"tick":0,"move":[-1,0]}]},"events":[]},
+  {"name":"wind","night":3,"ticks":2100,"scenario":{"random_motes":false,"random_shades":false,"random_drifters":false,"wind_enabled":true,"player":{"pos":[0,0,30]}},"inputs":{"frames":[]},"events":[]},
+  {"name":"fall-respawn","night":1,"ticks":61,"scenario":{"random_motes":false,"random_shades":false,"player":{"pos":[50,-10.1,0],"carried":8,"invuln_ticks":500}},"inputs":{"frames":[]},"events":["player_hit"]}
+]
