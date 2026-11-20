@@ -1,4 +1,5 @@
 """Check a fresh extraction, rather than relying on files from the source tree."""
+import argparse
 import hashlib
 import json
 from pathlib import Path
@@ -11,7 +12,10 @@ from zipfile import ZipFile
 
 ROOT = Path(__file__).resolve().parents[1]
 if __name__ == '__main__':
-    archive = ROOT/'artifacts/dao-den-long-phase-2.zip'
+    parser=argparse.ArgumentParser()
+    parser.add_argument('--phase',choices=['phase-2','phase-3'],default='phase-3')
+    phase=parser.parse_args().phase
+    archive = ROOT/'artifacts'/('dao-den-long-'+phase+'.zip')
     clean = ROOT/'artifacts'/('clean-'+str(uuid4()))
     clean.mkdir()
     with ZipFile(archive) as z:
@@ -40,7 +44,7 @@ if __name__ == '__main__':
             assert opener.open('http://127.0.0.1:8013'+path).status == 200
         report = dict(passed=True, fresh_extraction=True, headless_cli=True, static_assets=True,
                       archive_sha256=hashlib.sha256(archive.read_bytes()).hexdigest(), bytes=archive.stat().st_size)
-        (ROOT/'docs/proof/phase-2/package.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
+        (ROOT/'docs/proof'/phase/'package.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
         print(json.dumps(report, indent=2))
     finally:
         server.terminate()

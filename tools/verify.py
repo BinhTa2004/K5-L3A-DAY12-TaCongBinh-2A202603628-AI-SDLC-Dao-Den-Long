@@ -15,7 +15,7 @@ from headless import simulate
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--phase', choices=['phase-1', 'phase-2'], required=True)
+    parser.add_argument('--phase', choices=['phase-1', 'phase-2', 'phase-3'], required=True)
     args = parser.parse_args()
     destination = ROOT / 'docs/proof' / args.phase
     destination.mkdir(parents=True, exist_ok=True)
@@ -24,8 +24,10 @@ def main():
     contract = json.loads((ROOT / 'game.contract.json').read_text())
     samples = []
     feature_checks = []
-    if args.phase == 'phase-2':
-        for case in json.loads((ROOT/'tests/scenarios/features.json').read_text()):
+    if args.phase in ['phase-2','phase-3']:
+        cases=json.loads((ROOT/'tests/scenarios/features.json').read_text())
+        if args.phase=='phase-3':cases+=json.loads((ROOT/'tests/scenarios/fuel.json').read_text())
+        for case in cases:
             options = dict(contract=contract, seed=2026, night=case['night'], ticks=case['ticks'],
                            snapshotEvery=1, scenario=case['scenario'], inputs=case['inputs'])
             output = simulate(options)
@@ -43,6 +45,13 @@ def main():
                 'launch-pad': lambda: final['player']['grounded'] and final['player']['pos'][0] > 42,
                 'wind': lambda: any(s['wind']['active'] for s in snapshots) and not final['wind']['active'] and final['player']['pos'] != snapshots[0]['player']['pos'],
                 'fall-respawn': lambda: final['player']['flames'] == 2 and final['player']['pos'] == [0,0,0] and len([r for r in rows if r.get('name') == 'player_hit']) == 1,
+                'fuel-out': lambda: not final['lanterns'][0]['lit'] and final['lanterns'][0]['ever_lit'] and final['lanterns'][0]['fuel']==0,
+                'relight': lambda: final['lanterns'][0]['lit'] and final['lanterns'][0]['relit_count']==1 and final['player']['capacity']==12 and final['score']==65,
+                'refuel': lambda: final['lanterns'][0]['fuel']==100 and final['score']==15,
+                'drain-stack': lambda: final['lanterns'][0]['fuel']==9 and len([r for r in rows if r.get('name')=='fuel_drain'])==2,
+                'dawn-survival': lambda: rows[-1]['state']=='won' and rows[-1]['score']==477,
+                'no-early-win': lambda: rows[-1]['state']=='playing' and final['sim_tick']==60,
+                'capacity-growth': lambda: final['player']['capacity']==20 and final['player']['carried']==20,
             }
             passed = passed and observations[case['name']]()
             (destination/(case['name']+'.jsonl')).write_text(output, encoding='utf-8', newline='\n')

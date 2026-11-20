@@ -98,7 +98,7 @@ def main():
         fps = evaluate('new Promise(resolve=>{let n=0,start=performance.now();function sample(now){n++;if(now-start>=3000)resolve(n*1000/(now-start));else requestAnimationFrame(sample)}requestAnimationFrame(sample)})')
         checks = {}
         per_night = [{'night': 1, 'average_fps': fps}]
-        if args.phase == 'phase-2':
+        if args.phase in ['phase-2','phase-3']:
             sys.path.insert(0, str(ROOT/'tools'))
             from headless import simulate
             contract = json.loads((ROOT/'game.contract.json').read_text())
@@ -128,6 +128,7 @@ def main():
                 scenario = dict(random_motes=False, random_shades=False, random_drifters=False,
                                 wind_enabled=False, player={'pos': [0, 6, 6] if n==3 else [0,0,25 if n==1 else 20], 'carried': 10},
                                 lanterns=lanterns)
+                if args.phase=='phase-3':scenario['time_left_s']=1/60
                 evaluate('__game.loadScenario('+str(n)+','+json.dumps(scenario)+')')
                 call('Input.dispatchKeyEvent', {'type': 'keyDown', 'code': 'KeyE', 'key': 'e'})
                 wait("__game.screen === 'result'")
@@ -149,11 +150,52 @@ def main():
             assert evaluate('__game.screen') == 'intro'
             assert evaluate('__game.game.night') == 2
             checks['loss_retries_same_night'] = True
+            if args.phase=='phase-3':
+                # Actual renderer checks, including a low lamp whose rounded fuel could read30.0.
+                scene = dict(random_motes=False,random_shades=False,random_drifters=False,time_left_s=20,
+                    player={'successful_lights':5,'carried':14},
+                    lanterns=[{'id':'L1','pos':[0,0,4],'lit':True,'fuel':20}],
+                    shades=[{'id':'S1','pos':[4,.8,2],'state':'stunned','state_ticks_left':600}])
+                evaluate('__game.loadScenario(1,'+json.dumps(scene)+')')
+                wait("document.getElementById('carry-label').textContent.includes('/ 20')")
+                evaluate("__game.show('pause');document.getElementById('pause-settings').click();const cb=document.getElementById('colorblind');cb.checked=true;cb.dispatchEvent(new Event('change'))")
+                evaluate("new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))")
+                assert evaluate("document.body.classList.contains('colorblind')")
+                assert evaluate("__game.visuals.meshes.get('shade:S1').children[2].material.color.getHex()") == 0x00B3FF
+                assert evaluate("__game.visuals.meshes.get('shade:S1').children[1].material.color.getHex()") == 0x00B3FF
+                assert evaluate("getComputedStyle(document.body).getPropertyValue('--danger').trim()") == '#FFFFFF'
+                assert evaluate("getComputedStyle(document.getElementById('clock').parentElement,'::before').content.includes('⚠')")
+                assert evaluate("__game.visuals.meshes.get('lantern:L2').userData.body.scale.y") == .8
+                assert evaluate("__game.visuals.meshes.get('lantern:L2').userData.tear.visible")
+                assert evaluate("document.getElementById('slots').children.length") == 20
+                evaluate("__game.game.simTick=0;document.getElementById('settings-back').click()")
+                evaluate("new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))")
+                assert evaluate("__game.visuals.meshes.get('lantern:L1').userData.fill.visible")
+                assert not evaluate("__game.visuals.meshes.get('lantern:L1').userData.circle.visible")
+                evaluate('__game.game.simTick=30')
+                evaluate("new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))")
+                assert not evaluate("__game.visuals.meshes.get('lantern:L1').userData.fill.visible")
+                evaluate("__game.game.simTick=0;document.getElementById('pause').hidden=true")
+                screenshot('colorblind-low-fuel')
+                before=evaluate('__game.visuals.ambient.intensity')
+                evaluate("__game.game.lanterns[0].fuelUnits=1;__game.game.step({})")
+                evaluate("new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))")
+                assert not evaluate('__game.game.lanterns[0].lit')
+                assert evaluate('__game.visuals.ambient.intensity')<before
+                assert evaluate("__game.visuals.meshes.get('lantern:L1').userData.tear.visible")
+                screenshot('extinguished-lantern')
+                checks['extinction_reduces_ambient_light']=True
+                checks['fuel_bars_blink_collapsed_torn_paper_dynamic_capacity'] = True
+                checks['colorblind_cyan_eyes_rim_white_warning'] = True
             evaluate("__game.show('menu');document.getElementById('menu-settings').click();const v=document.getElementById('volume'),s=document.getElementById('sensitivity');v.value=.31;s.value=1.4;v.dispatchEvent(new Event('input'));s.dispatchEvent(new Event('input'))")
             call('Page.reload')
             wait('!!window.__game')
             assert evaluate('__game.settings.volume') == .31
             assert evaluate('__game.settings.sensitivity') == 1.4
+            if args.phase=='phase-3':
+                assert evaluate('__game.settings.colorblind') is True
+                assert evaluate("document.getElementById('colorblind').checked")
+                checks['colorblind_survives_reload']=True
             checks['settings_survive_reload'] = True
         gpu = evaluate("(()=>{const gl=__game.renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info');return ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER)})()")
         report = {'viewport': [1280, 720], 'renderer': gpu,

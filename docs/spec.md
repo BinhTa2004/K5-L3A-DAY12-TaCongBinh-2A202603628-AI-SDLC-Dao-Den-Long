@@ -57,3 +57,25 @@ Nguồn: `requirements/phase-2.txt` và `requirements/phase-2-standard.md`. Tuni
 `python tools/browser_check.py --phase phase-2` cần Chrome và websocket-client; chạy GUI thật ở1280×720, kiểm tra parity, UI campaign/settings, đo từng Đêm có số Bóng tối đa. Scenario thắng nhanh trong bài browser là tình huống QA dựng có chủ đích, không phải video chơi toàn bộ màn.
 
 Test ẩn của giảng viên chưa được truy cập, vì vậy chỉ khẳng định các kiểm chứng của repo đạt. Chưa chạy trên máy chấm macOS/Linux; CI chưa được coi là bằng chứng tới khi workflow chạy.
+
+# Phase3 — giữ đảo sáng tới bình minh
+
+Phần Phase1/2 phía trên mô tả các phiên bản lịch sử. Luật hiện tại ưu tiên [Ticket-03](requirements/phase-3.md) và [ADR-003](adr/003-fuel-and-dawn.md). Changelog ở gốc repo liệt kê từng test thay và lý do; không bỏ chạy regression không bị thay.
+
+| Yêu cầu | Tiêu chí nghiệm thu | Kiểm chứng |
+|---|---|---|
+| Dầu | Hao chính xác1/s, hết0 tắt/reset deposited/giữ ever_lit; thắp100; E ceil lượng thiếu/cap100; full không event | PhaseThree decay, full/refuel, scenario fuel-out/refuel |
+| Thắp lại | Ever_lit cần5, ghi relight true và relit_count; thắp đầu10/relightfalse; không thưởng scenario | first_light_and_relight, partial_relight, relight.jsonl |
+| Hút dầu | Chỉ wander chọn đèn yếu gần nhất/id; drain≤2m, cộng dồn5/s mỗi con; event mỗi60tick hút; chase giữ mục tiêu | stacked_drain, target_tie, drain-stack.jsonl |
+| Chuyển trạng thái | Drain→chase6m; hết đèn/out-of-range→wander; pulse→stunned; hết choáng→wander; refill≥30 ejection≤30tick không hit | drain exit/pulse/expiry/refill tests |
+| Ngưỡng an toàn | Dầu đúng30 còn an toàn, nhỏ hơn30 mất; dùng số nguyên chưa tròn | weak_lamp_loses_safe_zone test, circle renderer check |
+| Bình minh | Không early-win; cuối Đêm≥ceil(.6*n); extinction/refill/hit tick cuối có hiệu lực; death ưu tiên | all_lit_no_early_win, thresholds all nights, final-tick tests, campaign GUI |
+| Sức chứa | min(20,10+2*successful_lights), actual first/relight tăng; scenario prelit không tăng, reset Đêm | capacity cases + renderer20slots |
+| Điểm | 5/mote,100first/40relight,5pulse/15drainpulse, bonus50+floor(raw fuel)/lit và50/flame; không time bonus | score/refuel/pulse/dawn tests |
+| Hiển thị dầu | Đèn đang sáng có thanh; dưới30 dầu nhấp nháy cả đèn/thanh1Hz; ambient giảm khi out | browser low-fuel blink, screenshots |
+| Mù màu | Checkbox lưu; viền/mắt#00B3FF, UIwarning#FFFFFF+⚠; đèn tắt paper.scaleY.8 và tear visible | browser checks/reload + colorblind-low-fuel.png |
+| Contract1.2 | Đủ tuning/snapshot/scenario/event mới; dầu làm tròn1chữ số; capacity/drain | PhaseThree version/scenario/event tests; byte parity browser/QuickJS |
+
+Tái lập: `python tools/verify.py --phase phase-3`, `python tools/browser_check.py --phase phase-3`. Verifier chạy mọi test và15 case headless, sinh report/hash/log. Benchmark đủ14400/16200/18000tick với bản đồ và spawn thực, đặt invuln trong scenario để phép đo không dừng sớm vì bị đánh. Browser QA thắng nhanh dùng time_left_s1/60 theo scenario để kiểm tra chuyển Đêm, không phải lượt chơi toàn Đêm.
+
+Các bằng chứng thật trong docs/proof/phase-3. Tag/evidence cũ giữ nguyên. Chưa được chạy test ẩn; không suy ra mọi test ẩn đã đạt từ test tự viết.

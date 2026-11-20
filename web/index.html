@@ -37,13 +37,14 @@
       <div class="eyebrow">THEO CÁCH CỦA BẠN</div><h1>Cài đặt</h1>
       <label>Âm lượng <output id="volume-value"></output><input id="volume" type="range" min="0" max="1" step="0.01"></label>
       <label>Độ nhạy chuột <output id="sensitivity-value"></output><input id="sensitivity" type="range" min="0.2" max="2" step="0.1"></label>
+      <label class="toggle"><input id="colorblind" type="checkbox"> Bảng màu dễ phân biệt</label>
       <p>Kéo chuột để xoay camera · Cuộn để thu phóng<br>WASD / phím mũi tên · Space nhảy · Shift lướt<br>E nạp ánh sáng · Q tỏa sáng · Esc / P tạm dừng</p>
       <button id="settings-back" class="primary">Xong</button>
     </section>
   </main>
   <div id="hud" hidden>
     <div class="hud-top"><div class="panel flames"><small>NGỌN LỬA</small><strong id="flames"></strong><span id="night-name"></span></div><div class="panel clock"><small>TRƯỚC BÌNH MINH</small><strong id="clock">05:00</strong></div><div class="panel progress"><small>ÁNH SÁNG TRỞ VỀ</small><strong id="lantern-count"></strong><span id="score"></span></div></div>
-    <div id="wind" hidden>❧ Gió đang nổi lên…</div><div id="compass" hidden><span>➤</span><small id="compass-distance"></small></div>
+    <div id="mission">Giữ đảo sáng tới bình minh</div><div id="wind" hidden>❧ Gió đang nổi lên…</div><div id="compass" hidden><span>➤</span><small id="compass-distance"></small></div>
     <div id="interaction" hidden></div><div id="toast" role="status"></div>
     <div class="hud-bottom"><div class="control-hint">WASD di chuyển · Kéo chuột xoay góc nhìn<br>SPACE nhảy · ESC tạm dừng</div><div class="inventory panel"><small>NHỮNG ĐỐM SÁNG</small><div id="slots"></div><span id="carry-label"></span><span id="charm-label"></span></div><div class="abilities"><div id="dash-ability" class="panel"><kbd>SHIFT</kbd><span>Lướt</span><strong id="dash-cd"></strong></div><div class="panel"><kbd>Q</kbd><span>Tỏa sáng · 3 đốm</span><strong id="pulse-cd"></strong></div></div></div>
     <button id="pause-button" aria-label="Tạm dừng">Ⅱ</button>
