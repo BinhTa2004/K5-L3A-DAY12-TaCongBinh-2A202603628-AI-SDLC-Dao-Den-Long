@@ -1,0 +1,23 @@
+{
+  "phase": "phase-1",
+  "platform": "Windows-10-10.0.19045-SP0",
+  "python": "3.12.9",
+  "core_sha256": "70fa45ec036e4fa7e16182a308022c5d8cb3186ff0fa11be227dbacbb08ab55c",
+  "contract_sha256": "a293fe2a2f749e7de4b4f3037e9e92613c4d7fe2b19cab2fe57337ee7ff25699",
+  "tests_exit_code": 0,
+  "headless": [
+    {
+      "night": 1,
+      "elapsed_seconds": 1.221359900002426,
+      "deterministic": true,
+      "sha256": "3bdbf8fb9dd9318d339b7a05a367bcb7ac8fd5d9defbf0f6c214e86e0c5c5fee",
+      "end": {
+        "type": "end",
+        "ticks": 21600,
+        "state": "lost",
+        "score": 0
+      }
+    }
+  ],
+  "passed": true
+}

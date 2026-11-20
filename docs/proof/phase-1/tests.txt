@@ -1,0 +1,19 @@
+test_camera_diagonal_and_persistent_fields (test_contract.PhaseOne.test_camera_diagonal_and_persistent_fields) ... ok
+test_cli_error_exit_code (test_contract.PhaseOne.test_cli_error_exit_code) ... ok
+test_damage_invulnerability_and_loss (test_contract.PhaseOne.test_damage_invulnerability_and_loss) ... ok
+test_dawn (test_contract.PhaseOne.test_dawn) ... ok
+test_deterministic_with_random_spawning (test_contract.PhaseOne.test_deterministic_with_random_spawning) ... ok
+test_inclusive_pickup_and_capacity (test_contract.PhaseOne.test_inclusive_pickup_and_capacity) ... ok
+test_jump_returns_to_ground (test_contract.PhaseOne.test_jump_returns_to_ground) ... ok
+test_lighting_and_winning (test_contract.PhaseOne.test_lighting_and_winning) ... ok
+test_malformed_inputs_and_scenarios (test_contract.PhaseOne.test_malformed_inputs_and_scenarios) ... ok
+test_no_pulse_without_light (test_contract.PhaseOne.test_no_pulse_without_light) ... ok
+test_partial_deposits_and_button_edge (test_contract.PhaseOne.test_partial_deposits_and_button_edge) ... ok
+test_pulse_cost_stun_and_no_held_repeat (test_contract.PhaseOne.test_pulse_cost_stun_and_no_held_repeat) ... ok
+test_scenario_has_no_rewards_or_events (test_contract.PhaseOne.test_scenario_has_no_rewards_or_events) ... ok
+test_tick_zero_and_exact_steps (test_contract.PhaseOne.test_tick_zero_and_exact_steps) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 1.583s
+
+OK

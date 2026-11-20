@@ -1,0 +1,12 @@
+{
+  "viewport": [
+    1280,
+    720
+  ],
+  "renderer": "Chrome headless / SwiftShader software WebGL",
+  "average_fps": 6.21849839628199,
+  "movement": true,
+  "pause": true,
+  "runtime_errors": [],
+  "note": "Software rendering on this machine; hardware FPS must be rechecked on the grading machine."
+}
