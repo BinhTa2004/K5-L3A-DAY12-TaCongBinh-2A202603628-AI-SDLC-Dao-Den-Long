@@ -16,6 +16,7 @@ def main():
     import websocket
     parser = argparse.ArgumentParser()
     parser.add_argument('--phase', required=True)
+    parser.add_argument('--software', action='store_true')
     args = parser.parse_args()
     out = ROOT/'docs/proof'/args.phase
     out.mkdir(parents=True, exist_ok=True)
@@ -27,7 +28,8 @@ def main():
         raise RuntimeError('Set CHROME_BIN to a Chrome executable')
     flags = dict(creationflags=subprocess.CREATE_NO_WINDOW) if os.name == 'nt' else {}
     server = subprocess.Popen([sys.executable, str(ROOT/'tools/serve.py'), '--port', '8012'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, **flags)
-    browser = subprocess.Popen([chrome, '--headless=new', '--no-first-run', '--no-default-browser-check', '--no-proxy-server', '--remote-debugging-port=9232', '--remote-allow-origins=*', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--window-size=1280,720', '--user-data-dir='+str(profile), 'about:blank'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, **flags)
+    graphics = ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] if args.software else ['--enable-gpu-rasterization']
+    browser = subprocess.Popen([chrome, '--headless=new', '--no-first-run', '--no-default-browser-check', '--no-proxy-server', '--remote-debugging-port=9232', '--remote-allow-origins=*', *graphics, '--window-size=1280,720', '--user-data-dir='+str(profile), 'about:blank'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, **flags)
     ws = None
     try:
         opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
@@ -94,12 +96,74 @@ def main():
         assert evaluate('__game.screen') == 'play'
         # FPS is measured using real requestAnimationFrame time, not capped simulation dt.
         fps = evaluate('new Promise(resolve=>{let n=0,start=performance.now();function sample(now){n++;if(now-start>=3000)resolve(n*1000/(now-start));else requestAnimationFrame(sample)}requestAnimationFrame(sample)})')
-        report = {'viewport': [1280, 720], 'renderer': 'Chrome headless / SwiftShader software WebGL',
+        checks = {}
+        per_night = [{'night': 1, 'average_fps': fps}]
+        if args.phase == 'phase-2':
+            sys.path.insert(0, str(ROOT/'tools'))
+            from headless import simulate
+            contract = json.loads((ROOT/'game.contract.json').read_text())
+            options = dict(contract=contract, seed=99, night=2, ticks=1500, snapshotEvery=10,
+                           scenario={'player': {'invuln_ticks': 2000}}, inputs={})
+            checks['browser_headless_byte_parity'] = evaluate('Lantern.run('+json.dumps(options)+')') == simulate(options)
+            assert checks['browser_headless_byte_parity']
+            for n in [1, 2, 3]:
+                # Representative populated scene, with damage disabled only to keep QA running.
+                evaluate(f"__game.begin({n});document.getElementById('enter').click();__game.game.player.invuln=10000")
+                evaluate("for(let i=0;i<__game.game.map.shadeMax;i++){let p=__game.game.map.shadePoints[i].slice();p[1]=.8;__game.game.shades.push({id:'QA'+i,pos:p,state:'wander',timer:0,pushTicks:0,recoilTicks:0})}")
+                if n >= 2:
+                    evaluate("__game.game.drifters.push({id:'QA1',pos:[8,0,0],state:'idle',stolen:0,timer:0,dir:[1,0],hasStolen:false},{id:'QA2',pos:[-8,0,0],state:'idle',stolen:0,timer:0,dir:[1,0],hasStolen:false})")
+                time.sleep(.4)
+                screenshot('night-'+str(n))
+                value = evaluate('new Promise(resolve=>{let n=0,start=performance.now();function sample(now){n++;if(now-start>=3000)resolve(n*1000/(now-start));else requestAnimationFrame(sample)}requestAnimationFrame(sample)})')
+                per_night.append({'night': n, 'average_fps': value, 'max_shades': [6,8,10][n-1], 'drifters': 0 if n==1 else 2})
+            evaluate("__game.show('menu');document.getElementById('start').click()")
+            expected_total = 0
+            for n in [1, 2, 3]:
+                assert evaluate('__game.screen') == 'intro'
+                assert evaluate('__game.game.night') == n
+                evaluate("document.getElementById('enter').click()")
+                count = [5, 6, 7][n-1]
+                lanterns = [{'id': 'L'+str(i), 'lit': True} for i in range(2, count+1)]
+                # Controlled scenario tests a genuine deposit -> win -> next-night UI transition.
+                scenario = dict(random_motes=False, random_shades=False, random_drifters=False,
+                                wind_enabled=False, player={'pos': [0, 6, 6] if n==3 else [0,0,25 if n==1 else 20], 'carried': 10},
+                                lanterns=lanterns)
+                evaluate('__game.loadScenario('+str(n)+','+json.dumps(scenario)+')')
+                call('Input.dispatchKeyEvent', {'type': 'keyDown', 'code': 'KeyE', 'key': 'e'})
+                wait("__game.screen === 'result'")
+                call('Input.dispatchKeyEvent', {'type': 'keyUp', 'code': 'KeyE', 'key': 'e'})
+                assert evaluate('__game.game.state') == 'won'
+                expected_total += evaluate('__game.game.score')
+                if n < 3:
+                    evaluate("document.getElementById('next').click()")
+            assert evaluate("document.getElementById('result-title').textContent") == 'Bình Minh'
+            assert str(expected_total) in evaluate("document.getElementById('result-score').textContent.replaceAll('.','')")
+            screenshot('campaign-dawn')
+            checks['three_night_campaign_and_total'] = True
+            lose = {'random_motes': False, 'random_shades': False, 'random_drifters': False,
+                    'player': {'flames': 1}, 'shades': [{'pos': [0,0,0]}]}
+            evaluate('__game.loadScenario(2,'+json.dumps(lose)+')')
+            wait("__game.screen === 'result'")
+            assert evaluate('__game.game.state') == 'lost'
+            evaluate("document.getElementById('next').click()")
+            assert evaluate('__game.screen') == 'intro'
+            assert evaluate('__game.game.night') == 2
+            checks['loss_retries_same_night'] = True
+            evaluate("__game.show('menu');document.getElementById('menu-settings').click();const v=document.getElementById('volume'),s=document.getElementById('sensitivity');v.value=.31;s.value=1.4;v.dispatchEvent(new Event('input'));s.dispatchEvent(new Event('input'))")
+            call('Page.reload')
+            wait('!!window.__game')
+            assert evaluate('__game.settings.volume') == .31
+            assert evaluate('__game.settings.sensitivity') == 1.4
+            checks['settings_survive_reload'] = True
+        gpu = evaluate("(()=>{const gl=__game.renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info');return ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER)})()")
+        report = {'viewport': [1280, 720], 'renderer': gpu,
                   'average_fps': fps, 'movement': True, 'pause': True, 'runtime_errors': errors,
-                  'note': 'Software rendering on this machine; hardware FPS must be rechecked on the grading machine.'}
+                  'checks': checks, 'per_night': per_night,
+                  'note': 'Measured with requestAnimationFrame on this machine; grading hardware may differ.'}
         (out/'browser.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
         print(json.dumps(report, indent=2))
         assert not errors, errors
+        assert all(n['average_fps'] >= 30 for n in per_night), per_night
     finally:
         if ws:
             ws.close()

@@ -1,0 +1,3 @@
+# Optional browser QA; not required to play or run the headless contract.
+-r requirements.txt
+websocket-client==1.8.0

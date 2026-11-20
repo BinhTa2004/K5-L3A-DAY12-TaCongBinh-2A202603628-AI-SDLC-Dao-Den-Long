@@ -80,12 +80,13 @@ class PhaseTwo(unittest.TestCase):
             self.assertEqual(m['ttl_s'], 8)
 
     def test_fall_ignores_invulnerability_once_and_respawns(self):
-        rows = run(61, scenario={'player': {'pos': [50, -10.1, 0], 'carried': 7, 'invuln_ticks': 999}})
+        rows = run(61, scenario={'player': {'pos': [50, -10.1, 0], 'carried': 7, 'invuln_ticks': 999}}, frames=[{'tick': 0, 'move': [0,1]}])
         hits = events(rows, 'player_hit')
         self.assertEqual(len(hits), 1)
         self.assertEqual(hits[0]['data'], {'by': 'fall', 'flames': 2, 'dropped': 0, 'lost': 7})
         self.assertEqual(snaps(rows)[60]['player']['pos'][0], 50)
         self.assertEqual(snaps(rows)[61]['player']['pos'], [0, 0, 0])
+        self.assertEqual(snaps(rows)[61]['player']['vel'], [0, 0, 0])
         self.assertTrue(snaps(rows)[61]['player']['invuln'])
 
     def test_death_priority_and_win_at_dawn(self):

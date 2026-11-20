@@ -1,0 +1,42 @@
+{
+  "viewport": [
+    1280,
+    720
+  ],
+  "renderer": "ANGLE (Intel, Intel(R) HD Graphics 630 (0x0000591B) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "average_fps": 60.11491580592009,
+  "movement": true,
+  "pause": true,
+  "runtime_errors": [],
+  "checks": {
+    "browser_headless_byte_parity": true,
+    "three_night_campaign_and_total": true,
+    "loss_retries_same_night": true,
+    "settings_survive_reload": true
+  },
+  "per_night": [
+    {
+      "night": 1,
+      "average_fps": 60.11491580592009
+    },
+    {
+      "night": 1,
+      "average_fps": 60.32327945348433,
+      "max_shades": 6,
+      "drifters": 0
+    },
+    {
+      "night": 2,
+      "average_fps": 60.11491580590522,
+      "max_shades": 8,
+      "drifters": 2
+    },
+    {
+      "night": 3,
+      "average_fps": 60.230940734130186,
+      "max_shades": 10,
+      "drifters": 2
+    }
+  ],
+  "note": "Measured with requestAnimationFrame on this machine; grading hardware may differ."
+}

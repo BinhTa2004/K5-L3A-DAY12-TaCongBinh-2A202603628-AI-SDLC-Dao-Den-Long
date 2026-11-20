@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "fresh_extraction": true,
+  "headless_cli": true,
+  "static_assets": true,
+  "archive_sha256": "ce35bb03bd2a657fc32715750c5550d21f8956e3c2ac24ee603c5a1333606430",
+  "bytes": 284257
+}

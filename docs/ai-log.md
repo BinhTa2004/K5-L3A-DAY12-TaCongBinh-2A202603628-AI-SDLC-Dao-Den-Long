@@ -13,3 +13,21 @@
 ## Retro Phase 1
 
 Tách logic khỏi renderer cho phép kiểm tra sớm input/tick và tái lập output. Tài liệu Phase 2 được dán lần đầu thiếu bảng; đã hỏi lại và nhận đủ thay vì tự đoán chuẩn. Ưu tiên tiếp: chuẩn hóa, thêm scenario cho từng cơ chế, kiểm tra lại UI và số đo thực tế.
+
+## Phase 2
+
+- Đã nhận bảng chuẩn từ người dùng; giữ tag Phase1 với tuning cũ, đổi bản hiện tại sang contract1.1.
+- Tuning chuẩn, ba bản đồ, dash, jump pads, terrain/ramp/tower, pulse3D, recoil, rơi/hồi sinh, Gió Lạc, Bùa Gió, gió định kỳ, pause và snapshot mới dùng chung core.
+- GUI: chiến dịch ba Đêm, Bình Minh và tổng điểm Đêm thắng; thua retry; menu pause; localStorage cài đặt; nhạc/cue tổng hợp; HUD, cảnh báo lá/gió, bảng màu.
+- Harness được cập nhật thật trong AGENTS.md và skill verify-game; verifier kiểm tra cả event và trạng thái cuối của feature scenario. Browser QA riêng vì headless không chứng minh được giao diện.
+- Kiểm chứng:43 test gồm14 regression Phase1;8 feature scenario lưu JSONL; đủ3 Đêm, output lặp byte-identical; parity browser/QuickJS; GUI movement/pause/campaign/retry/settings; FPS từng bản đồ có đủ số Bóng tối đa. Đo trên Windows10, Python3.12.9, Intel HD630/D3D11; xem báo cáo sinh tự động để lấy số chính xác.
+- Lỗi/phát hiện: (1) đo WebGL bằng SwiftShader chỉ6FPS, đổi sang GPU mặc định cho số đo thực tế≈60FPS; giữ bằng chứng software trong Phase1, không sửa lại. (2) test tốc độ qua cầu vô tình nhặt Bùa Gió; tách scenario không bùa để đo chạy thường. (3) rà tick phát hiện recoil chỉ đi59 bước; sửa đủ60 và thêm test quan sát2m. (4) chuẩn hóa chữ UI và bổ sung lõi đèn đúng palette. (5) test rơi được mở rộng với phím di chuyển đang giữ: tick hồi sinh phải origin/vel0, không được đi ngay trong tick đó; đã sửa và chạy regression.
+- Chưa có quyền truy cập test ẩn; chưa chạy trên máy chấm macOS/Linux. CI đã cấu hình nhưng chỉ coi là bằng chứng khi dịch vụ chạy thành công. Chất lượng nghe âm thanh và review độc lập cần người dùng kiểm tra khi chơi.
+
+## Ước lượng token/chi phí
+
+Không có bảng usage/billing của phiên này. Không thể báo tổng token thật, cache hay chi phí. Một phép đo tham khảo cho quy mô đầu ra: mã/tài liệu do agent tạo ở Phase1 khoảng69.767 byte, tương đương khoảng17.442 token theo quy tắc thô4byte/token; mã hiện tại khoảng100.861byte (~25.215token). Đây **chỉ là proxy kích thước mã**, không phải tổng token model đã tiêu thụ, không tính reasoning, input, retry, tool output hay cache; văn bản tiếng Việt cũng không tuân tỷ lệ này chính xác. Chi phí: chưa có dữ liệu từ tài khoản người dùng.
+
+## Retro cuối Phase 2
+
+Hiệu quả nhất: cùng một core cho game/headless; các case nhỏ bắt lỗi thứ tự tick trước khi làm GUI; bằng chứng có lệnh tái lập và hash; hỏi lại bảng bị mất thay vì tự điền chuẩn. Các tính năng hiển thị cần browser QA riêng, đo FPS bằng thời gian requestAnimationFrame thật. Nếu làm lại: lưu bảng đầy đủ ngay lúc nhận, tách fixture ngay từ đầu, thêm sớm các test biên timer/recoil để giảm vòng sửa. Phần sáng tạo chỉ là mô hình/quầng sáng/nhạc thủ tục, không thêm thực thể ảnh hưởng headless.

@@ -180,9 +180,10 @@
       for(const c of this.charms)if(!c.available&&c.respawn>0){c.respawn--;if(c.respawn===0)c.available=true;}
       for (const m of this.motes) if (m.ttl !== null) m.ttl--;
       this.motes = this.motes.filter(m => m.ttl === null || m.ttl > 0);
-      if(p.respawn>0){p.respawn--;if(p.respawn===0){p.pos=[0,0,0];p.vel=[0,0,0];p.invuln=90;p.grounded=this.support(p.pos)===p.pos[1];}}
+      let justRespawned=false;
+      if(p.respawn>0){p.respawn--;if(p.respawn===0){p.pos=[0,0,0];p.vel=[0,0,0];p.invuln=90;p.grounded=this.support(p.pos)===p.pos[1];justRespawned=true;}}
       if(this.windEnabled){const k=this.simTick%1800;if(k===1680){this.wind.dir_deg=this.rng()*360;this.windWarning=true;}if(k===0){this.wind.active=true;this.windWarning=false;}if(k===300)this.wind.active=false;}
-      if(p.respawn===0){
+      if(p.respawn===0&&!justRespawned){
       let [mx, mz] = input.move, length = Math.hypot(mx, mz); if (length > 1) { mx /= length; mz /= length; }
       const a = input.cam_yaw_deg * Math.PI / 180, dx = mx*Math.cos(a) + mz*Math.sin(a), dz = -mx*Math.sin(a) + mz*Math.cos(a);
       if (Math.hypot(dx,dz) > EPS) p.facing = [dx / Math.hypot(dx,dz), dz / Math.hypot(dx,dz)];
@@ -210,7 +211,7 @@
       if(p.dashTicks>0)p.dashTicks--;
       if (p.pos[1] < -10) { if (t.fall_enabled) this.hit('fall'); }
       }
-      if(p.respawn===0&&p.flames>0){
+      if(p.respawn===0&&p.flames>0&&!justRespawned){
       const collected = new Set();
       for (const m of this.motes) if (m.born<this.simTick&&p.carried < t.carry_capacity && within(p.pos,m.pos,t.pickup_radius)&&Math.abs(p.pos[1]-m.pos[1])<=1.5+EPS) { p.carried++; collected.add(m.id); this.emit('mote_picked',{carried:p.carried}); }
       this.motes = this.motes.filter(m => !collected.has(m.id));
@@ -226,7 +227,7 @@
       }
       }
       this.safeShades();
-      if (p.respawn===0 && p.flames>0 && pressed('pulse') && p.pulseCd === 0 && p.carried >= t.pulse_cost) {
+      if (p.respawn===0 && p.flames>0 && !justRespawned && pressed('pulse') && p.pulseCd === 0 && p.carried >= t.pulse_cost) {
         p.carried -= t.pulse_cost; p.pulseCd = Math.round(t.pulse_cooldown_s*60); const stunned_ids = [];
         const pulseHits=pos=>Math.hypot(pos[0]-p.pos[0],pos[1]-p.pos[1]-.8,pos[2]-p.pos[2])<=t.pulse_radius+EPS;
         for (const s of this.shades.slice().sort(byId)) if (pulseHits(s.pos)) {
@@ -250,7 +251,7 @@
         this.moveShade(s,d,Math.min((this.night===3?4.5:t.shade_speed)*DT,dist));
       }
       this.moveDrifters();
-      if(p.respawn===0&&p.flames>0){
+      if(p.respawn===0&&p.flames>0&&!justRespawned){
         for(const d of this.drifters.slice().sort(byId))if(!d.hasStolen&&d.state==='chase'&&within(d.pos,p.pos,1.2)){
           const amount=Math.min(3,p.carried);p.carried-=amount;d.stolen=amount;d.hasStolen=true;d.state='flee';d.timer=240;d.dir=this.direction(p.pos,d.pos);this.emit('drifter_steal',{drifter_id:d.id,amount,carried:p.carried});
         }

@@ -1,0 +1,81 @@
+{
+  "phase": "phase-2",
+  "platform": "Windows-10-10.0.19045-SP0",
+  "python": "3.12.9",
+  "core_sha256": "28ede661a835208ff030b8762b96292d900a0bd0094c9f569dfca284054a9333",
+  "contract_sha256": "28545a694cfe0848fca20e71a63bc273dbc2d6e6027ee62a662ce0990f872c41",
+  "tests_exit_code": 0,
+  "headless": [
+    {
+      "night": 1,
+      "elapsed_seconds": 2.8770360999988043,
+      "deterministic": true,
+      "sha256": "1c18e817ca58cb3d712446570ea1dadf2d7a6959b814d4cff2f1d0485b79de4b",
+      "end": {
+        "type": "end",
+        "ticks": 18000,
+        "state": "lost",
+        "score": 0
+      }
+    },
+    {
+      "night": 2,
+      "elapsed_seconds": 4.462792000002082,
+      "deterministic": true,
+      "sha256": "13a1b94e3b55fd27cf54358c1c8b310d5e94c152ce9d202073942ca04ab8ed42",
+      "end": {
+        "type": "end",
+        "ticks": 19800,
+        "state": "lost",
+        "score": 0
+      }
+    },
+    {
+      "night": 3,
+      "elapsed_seconds": 5.638703700002225,
+      "deterministic": true,
+      "sha256": "9baacf1f2a4cea510b80579358e98fdb0f9b180191edf5c0e9daa085efb67409",
+      "end": {
+        "type": "end",
+        "ticks": 21600,
+        "state": "lost",
+        "score": 0
+      }
+    }
+  ],
+  "features": [
+    {
+      "name": "dash",
+      "passed": true
+    },
+    {
+      "name": "charm",
+      "passed": true
+    },
+    {
+      "name": "drifter-steal",
+      "passed": true
+    },
+    {
+      "name": "drifter-drop",
+      "passed": true
+    },
+    {
+      "name": "pause",
+      "passed": true
+    },
+    {
+      "name": "launch-pad",
+      "passed": true
+    },
+    {
+      "name": "wind",
+      "passed": true
+    },
+    {
+      "name": "fall-respawn",
+      "passed": true
+    }
+  ],
+  "passed": true
+}
