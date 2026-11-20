@@ -22,7 +22,7 @@
     if ('player' in s) {
       object(s.player, 'player');
       if ('pos' in s.player) position(s.player.pos, 'player.pos');
-      for (const k of ['carried', 'flames', 'invuln_ticks', 'dash_cd_ticks', 'pulse_cd_ticks', 'charm_ticks']) if (k in s.player) number(s.player[k], k, 0, true);
+      for (const k of ['carried', 'flames', 'invuln_ticks', 'dash_cd_ticks', 'pulse_cd_ticks', 'charm_ticks', 'successful_lights']) if (k in s.player) number(s.player[k], k, 0, true);
     }
     for (const name of ['motes', 'shades', 'lanterns', 'drifters', 'charms']) {
       if (!(name in s)) continue;
@@ -38,8 +38,10 @@
         for (const k of ['deposited', 'stolen', 'state_ticks_left', 'respawn_ticks', 'ttl_ticks']) if (k in v) number(v[k], k, 0, true);
         for (const k of ['respawn_s', 'ttl_s']) if (k in v&&v[k]!==null) number(v[k], k, 0);
         if(name==='motes'&&'kind' in v&&!['random','dropped'].includes(v.kind))fail('invalid mote kind');
-        for (const k of ['lit', 'available']) if (k in v && typeof v[k] !== 'boolean') fail(k + ' must be boolean');
-        if (name === 'shades' && 'state' in v && !['spawning', 'wander', 'chase', 'recoil', 'stunned'].includes(v.state)) fail('invalid shade state');
+        for (const k of ['lit', 'available', 'ever_lit']) if (k in v && typeof v[k] !== 'boolean') fail(k + ' must be boolean');
+        if(name==='lanterns'&&'fuel' in v){number(v.fuel,'fuel',0);if(v.fuel>100)fail('fuel exceeds maximum');}
+        if(name==='shades'&&'target_lantern_id' in v&&(!/^L[1-9]\d*$/.test(v.target_lantern_id)||Number(v.target_lantern_id.slice(1))>count))fail('invalid target_lantern_id');
+        if (name === 'shades' && 'state' in v && !['spawning', 'wander', 'chase', 'recoil', 'stunned', 'drain'].includes(v.state)) fail('invalid shade state');
         if (name === 'drifters' && 'state' in v && !['idle', 'chase', 'flee', 'removed'].includes(v.state)) fail('invalid drifter state');
       });
     }
@@ -100,11 +102,13 @@
         invuln: 0, pulseCd: 0, dashCd: 0, charm: 0, dashTicks: 0, facing: [0,1], launched: false,
         launchVel:[0,0],dashDir:[0,1],respawn:0,verticalSaved:null};
       const sp = scenario.player || {};
+      this.player.successfulLights=sp.successful_lights||0;
       for (const k of ['pos', 'carried', 'flames']) if (k in sp) this.player[k] = clone(sp[k]);
       this.player.grounded = Math.abs(this.player.pos[1] - this.support(this.player.pos)) < EPS;
       for (const pair of [['invuln_ticks','invuln'], ['pulse_cd_ticks','pulseCd'], ['dash_cd_ticks','dashCd'], ['charm_ticks','charm']]) this.player[pair[1]] = sp[pair[0]] || 0;
-      this.lanterns = this.map.lanterns.map((pos, i) => ({id: 'L'+(i+1), pos: pos.slice(), lit: false, deposited: 0}));
+      this.lanterns = this.map.lanterns.map((pos, i) => ({id: 'L'+(i+1), pos: pos.slice(), lit: false, deposited: 0,ever_lit:false,relit_count:0,fuelUnits:0}));
       for (const l of scenario.lanterns || []) Object.assign(this.lanterns.find(x => x.id === l.id), clone(l));
+      for(const l of this.lanterns){const v=(scenario.lanterns||[]).find(x=>x.id===l.id)||{};l.fuelUnits=l.lit?Math.round((v.fuel===undefined?this.t.fuel_max:v.fuel)*60):0;l.ever_lit=v.ever_lit===undefined?l.lit:v.ever_lit;delete l.fuel;}
       this.randomMotes = scenario.random_motes !== false; this.randomShades = scenario.random_shades !== false;
       this.moteId = 0; this.shadeId = 0;
       this.motes = []; this.shades = [];
@@ -113,7 +117,7 @@
         const points=this.map.motePoints.slice();
         for(let i=0;i<20&&points.length;i++) this.addMote(points.splice(Math.floor(this.rng()*points.length),1)[0]);
       }
-      for (const s of scenario.shades || []) { const v = clone(s); let id=v.id;if(!id){do{id='S'+(++this.shadeId);}while(this.shades.some(x=>x.id===id)||(scenario.shades||[]).some(x=>x.id===id));}const timer=v.state_ticks_left===undefined?({spawning:60,stunned:120,recoil:60}[v.state]||0):v.state_ticks_left;this.shades.push({id, pos:v.pos, state:v.state||'chase', timer,pushTicks:0,pushDir:[1,0],recoilTicks:v.state==='recoil'?timer:0,recoilDir:[1,0]}); }
+      for (const s of scenario.shades || []) { const v = clone(s); let id=v.id;if(!id){do{id='S'+(++this.shadeId);}while(this.shades.some(x=>x.id===id)||(scenario.shades||[]).some(x=>x.id===id));}const timer=v.state_ticks_left===undefined?({spawning:60,stunned:120,recoil:60}[v.state]||0):v.state_ticks_left;this.shades.push({id, pos:v.pos, state:v.state||'chase', timer,pushTicks:0,pushDir:[1,0],recoilTicks:v.state==='recoil'?timer:0,recoilDir:[1,0],target_lantern_id:v.target_lantern_id||null,drainTicks:0}); }
       this.randomDrifters=scenario.random_drifters!==false;
       this.drifterId=0;
       this.drifters=(scenario.drifters||[]).map(d=>({id:d.id||'D'+(++this.drifterId),pos:d.pos.slice(),state:d.state||'idle',stolen:d.stolen||0,timer:d.state_ticks_left===undefined?((d.state==='flee')?240:0):d.state_ticks_left,dir:[1,0],hasStolen:(d.stolen||0)>0}));
@@ -145,6 +149,47 @@
       this.motes.push({id, pos: pos.slice(), kind: options.kind || 'random', ttl: options.kind === 'dropped' ? (options.ttl_ticks === undefined ? (options.ttl_s===undefined?480:Math.round(options.ttl_s*60)) : options.ttl_ticks) : null,born:this.simTick});
     }
     emit(name, data = {}) { this.events.push({type: 'event', tick: this.tick, name, data}); }
+    capacity(){return Math.min(this.t.capacity_max,this.t.carry_capacity+2*this.player.successfulLights);}
+    fuel(l){return l.lit?Math.round(l.fuelUnits/6)/10:0;}
+    protected(l){return l.lit&&l.fuelUnits>=this.t.low_fuel_threshold*60;}
+    lightCost(l){return l.ever_lit?this.t.relight_cost:this.t.lantern_cost;}
+    accepts(l){return !l.lit||l.fuelUnits<this.t.fuel_max*60;}
+    burnFuel(){
+      // Read drain state before actor updates; aggregate all contributions before extinguishing.
+      const active=[];
+      for(const s of this.shades){
+        const l=this.lanterns.find(l=>l.id===s.target_lantern_id);
+        if(s.state==='drain'&&l&&l.lit&&!this.protected(l)&&within(s.pos,l.pos,2)&&!s.safeTicks){active.push({s,l});s.drainTicks=(s.drainTicks||0)+1;}
+        else s.drainTicks=0;
+      }
+      for(const l of this.lanterns)if(l.lit)l.fuelUnits=Math.max(0,l.fuelUnits-this.t.fuel_decay_per_s);
+      for(const {s,l} of active)l.fuelUnits=Math.max(0,l.fuelUnits-this.t.drain_per_s);
+      for(const {s,l} of active)if(s.drainTicks%60===0)this.emit('fuel_drain',{lantern_id:l.id,shade_id:s.id,fuel:this.fuel(l)});
+      for(const l of this.lanterns)if(l.lit&&l.fuelUnits<=0){l.lit=false;l.deposited=0;l.ever_lit=true;this.emit('lantern_out',{lantern_id:l.id});}
+    }
+    interactLantern(){
+      const p=this.player,t=this.t;
+      const choices=this.lanterns.filter(l=>this.accepts(l)&&within(p.pos,l.pos,t.interact_radius))
+        .sort((a,b)=>distance(p.pos,a.pos)-distance(p.pos,b.pos)||byId(a,b));
+      if(!choices.length||p.carried===0)return;
+      const l=choices[0];
+      if(l.lit){
+        const amount=Math.min(p.carried,Math.ceil((t.fuel_max*60-l.fuelUnits)/(t.fuel_per_mote*60)));
+        if(amount<=0)return;
+        p.carried-=amount;l.fuelUnits=Math.min(t.fuel_max*60,l.fuelUnits+amount*t.fuel_per_mote*60);
+        this.score+=amount*t.score.per_mote;this.emit('refuel',{lantern_id:l.id,amount,fuel:this.fuel(l)});return;
+      }
+      const amount=Math.min(p.carried,Math.max(0,this.lightCost(l)-l.deposited));
+      if(amount===0)return;
+      p.carried-=amount;l.deposited+=amount;this.score+=amount*t.score.per_mote;
+      this.emit('deposit',{lantern_id:l.id,amount,deposited:l.deposited});
+      if(l.deposited>=this.lightCost(l)){
+        const relight=l.ever_lit;l.lit=true;l.fuelUnits=t.fuel_max*60;l.ever_lit=true;
+        if(relight)l.relit_count++;p.successfulLights++;
+        this.score+=relight?t.score.per_relight:t.score.per_lantern;
+        this.emit('lantern_lit',{lantern_id:l.id,relight});
+      }
+    }
     direction(from, to) { const d = distance(from, to); return d < EPS ? [1,0] : [(to[0]-from[0])/d, (to[2]-from[2])/d]; }
     dropMotes(pos,count) {
       for(let i=0;i<count;i++){const a=this.rng()*Math.PI*2,r=1.5+this.rng();const x=pos[0]+Math.cos(a)*r,z=pos[2]+Math.sin(a)*r;let y=this.ground([x,pos[1],z]);if(!Number.isFinite(y))y=pos[1];this.addMote([x,y,z],{kind:'dropped'});}
@@ -172,9 +217,12 @@
       const p = this.player, t = this.t;
       for (const k of ['invuln', 'pulseCd', 'dashCd', 'charm']) p[k] = Math.max(0, p[k] - 1);
       for (const s of this.shades) {
+        const priorState=s.state;s.justRecovered=false;
         if(s.timer>0){s.timer--;if(s.timer===0&&!(s.state==='recoil'&&s.recoilTicks>0))s.state='wander';}
         else if(s.state==='recoil'&&s.recoilTicks===0)s.state='wander';
+        if(priorState==='stunned'&&s.state==='wander')s.justRecovered=true;
       }
+      this.burnFuel();
       for(const d of this.drifters)if(d.state==='flee'&&d.timer>0){d.timer--;if(d.timer===0)d.state='removed';}
       this.drifters=this.drifters.filter(d=>d.state!=='removed');
       for(const c of this.charms)if(!c.available&&c.respawn>0){c.respawn--;if(c.respawn===0)c.available=true;}
@@ -213,26 +261,18 @@
       }
       if(p.respawn===0&&p.flames>0&&!justRespawned){
       const collected = new Set();
-      for (const m of this.motes) if (m.born<this.simTick&&p.carried < t.carry_capacity && within(p.pos,m.pos,t.pickup_radius)&&Math.abs(p.pos[1]-m.pos[1])<=1.5+EPS) { p.carried++; collected.add(m.id); this.emit('mote_picked',{carried:p.carried}); }
+      for (const m of this.motes) if (m.born<this.simTick&&p.carried < this.capacity() && within(p.pos,m.pos,t.pickup_radius)&&Math.abs(p.pos[1]-m.pos[1])<=1.5+EPS) { p.carried++; collected.add(m.id); this.emit('mote_picked',{carried:p.carried}); }
       this.motes = this.motes.filter(m => !collected.has(m.id));
       for(const c of this.charms)if(c.available&&within(p.pos,c.pos,t.pickup_radius)&&Math.abs(p.pos[1]-c.pos[1])<=1.5+EPS){c.available=false;c.respawn=2700;p.charm=600;this.emit('charm_picked',{charm_id:c.id,charm_ticks:600});}
-      if (pressed('interact')) {
-        const candidates = this.lanterns.filter(l => !l.lit && within(p.pos,l.pos,t.interact_radius)).sort((a,b) => distance(p.pos,a.pos)-distance(p.pos,b.pos) || byId(a,b));
-        if (candidates.length && p.carried > 0) {
-          const l = candidates[0], amount = Math.min(p.carried, Math.max(0,t.lantern_cost-l.deposited));
-          p.carried -= amount; l.deposited += amount; this.score += amount*t.score.per_mote;
-          this.emit('deposit',{lantern_id:l.id,amount,deposited:l.deposited});
-          if (l.deposited >= t.lantern_cost) { l.lit = true; this.score += t.score.per_lantern; this.emit('lantern_lit',{lantern_id:l.id}); }
-        }
-      }
+      if (pressed('interact'))this.interactLantern();
       }
       this.safeShades();
       if (p.respawn===0 && p.flames>0 && !justRespawned && pressed('pulse') && p.pulseCd === 0 && p.carried >= t.pulse_cost) {
         p.carried -= t.pulse_cost; p.pulseCd = Math.round(t.pulse_cooldown_s*60); const stunned_ids = [];
         const pulseHits=pos=>Math.hypot(pos[0]-p.pos[0],pos[1]-p.pos[1]-.8,pos[2]-p.pos[2])<=t.pulse_radius+EPS;
         for (const s of this.shades.slice().sort(byId)) if (pulseHits(s.pos)) {
-          s.state = 'stunned'; s.timer = Math.round(t.pulse_stun_s*60);s.pushDir=this.direction(p.pos,s.pos);s.pushTicks=15;
-          stunned_ids.push(s.id); this.score += t.score.per_stun;
+          const draining=s.state==='drain';s.state = 'stunned'; s.timer = Math.round(t.pulse_stun_s*60);s.pushDir=this.direction(p.pos,s.pos);s.pushTicks=15;s.drainTicks=0;s.justRecovered=false;
+          stunned_ids.push(s.id); this.score += draining?t.score.per_drain_stun:t.score.per_stun;
         }
         for(const d of this.drifters)if(pulseHits(d.pos)){
           if(d.state==='chase'){d.state='flee';d.timer=240;d.dir=this.direction(p.pos,d.pos);d.hasStolen=true;}
@@ -242,13 +282,29 @@
       }
       for (const s of this.shades.slice().sort(byId)) {
         if(s.safeTicks>0){const l=this.lanterns.find(l=>l.id===s.safeId);const d=this.direction(l.pos,s.pos),len=distance(l.pos,s.pos),push=Math.max(0,t.safe_radius-len)/s.safeTicks;s.pos[0]+=d[0]*push;s.pos[2]+=d[1]*push;s.safeTicks--;if(s.safeTicks===0){s.pos[0]=l.pos[0]+d[0]*t.safe_radius;s.pos[2]=l.pos[2]+d[1]*t.safe_radius;}continue;}
+        if(s.justRecovered)continue;
         if(s.state==='stunned'){if(s.pushTicks>0){this.moveShade(s,s.pushDir,t.pulse_push_m/15);s.pushTicks--;}continue;}
         if(s.state==='spawning')continue;
         if(s.state==='recoil'){if(s.recoilTicks>0){this.moveShade(s,s.recoilDir,2/60);s.recoilTicks--;}continue;}
+        if(s.state==='drain'){
+          const l=this.lanterns.find(l=>l.id===s.target_lantern_id);
+          if(!l||!l.lit||this.protected(l)||!within(s.pos,l.pos,2)){s.state='wander';s.target_lantern_id=null;s.drainTicks=0;}
+          else if(within(s.pos,p.pos,6)){s.state='chase';s.target_lantern_id=null;s.drainTicks=0;}
+          else continue;
+        }
         const dist=distance(s.pos,p.pos);
         if(s.state==='chase'&&dist>18)s.state='wander';else if(s.state==='wander'&&dist<=12+EPS)s.state='chase';
-        const d=s.state==='chase'?this.direction(s.pos,p.pos):[Math.cos(this.simTick*.008+s.pos[0]),Math.sin(this.simTick*.008+s.pos[2])];
+        let target=null;
+        if(s.state==='wander'){
+          const weak=this.lanterns.filter(l=>l.lit&&!this.protected(l));
+          const choices=weak.length?weak:this.lanterns.filter(l=>!l.lit);
+          choices.sort((a,b)=>distance(s.pos,a.pos)-distance(s.pos,b.pos)||byId(a,b));target=choices[0]||null;
+          s.target_lantern_id=target?target.id:null;
+          if(target&&target.lit&&within(s.pos,target.pos,2)){s.state='drain';s.drainTicks=0;continue;}
+        }
+        const d=s.state==='chase'?this.direction(s.pos,p.pos):target?this.direction(s.pos,target.pos):[Math.cos(this.simTick*.008+s.pos[0]),Math.sin(this.simTick*.008+s.pos[2])];
         this.moveShade(s,d,Math.min((this.night===3?4.5:t.shade_speed)*DT,dist));
+        if(s.state==='wander'&&target&&target.lit&&!this.protected(target)&&within(s.pos,target.pos,2)){s.state='drain';s.drainTicks=0;}
       }
       this.moveDrifters();
       if(p.respawn===0&&p.flames>0&&!justRespawned){
@@ -259,18 +315,20 @@
       }
       this.spawn();
       if (p.flames <= 0) this.finish('lost','no_flames');
-      else if (this.lanterns.every(l => l.lit)) this.finish('won','all_lit');
-      else if (this.remainingTicks <= 0) this.finish('lost','dawn');
+      else if (this.remainingTicks <= 0){const lit=this.lanterns.filter(l=>l.lit).length;this.finish(lit>=Math.ceil(t.win_ratio*this.lanterns.length)?'won':'lost',lit>=Math.ceil(t.win_ratio*this.lanterns.length)?'dawn_survived':'dawn');}
       return this.events;
     }
     safeShades() {
-      for (const s of this.shades) for (const l of this.lanterns) if (l.lit && distance(s.pos,l.pos)<this.t.safe_radius-EPS&&!s.safeTicks) {
-        s.safeTicks=30;s.safeId=l.id;
+      for(const s of this.shades){
+        if(s.safeTicks&&!this.lanterns.some(l=>l.id===s.safeId&&this.protected(l))){s.safeTicks=0;s.safeId=null;}
+        for(const l of this.lanterns)if(this.protected(l)&&distance(s.pos,l.pos)<this.t.safe_radius-EPS&&!s.safeTicks){
+          s.safeTicks=30;s.safeId=l.id;if(s.state==='drain'){s.state='wander';s.target_lantern_id=null;s.drainTicks=0;}
+        }
       }
     }
     moveShade(s,d,step){
       const next=[s.pos[0]+d[0]*step,s.pos[1],s.pos[2]+d[1]*step];
-      for(const l of this.lanterns)if(l.lit&&distance(s.pos,l.pos)>=this.t.safe_radius-EPS&&distance(next,l.pos)<this.t.safe_radius){const dir=this.direction(l.pos,next);next[0]=l.pos[0]+dir[0]*this.t.safe_radius;next[2]=l.pos[2]+dir[1]*this.t.safe_radius;}
+      for(const l of this.lanterns)if(this.protected(l)&&distance(s.pos,l.pos)>=this.t.safe_radius-EPS&&distance(next,l.pos)<this.t.safe_radius){const dir=this.direction(l.pos,next);next[0]=l.pos[0]+dir[0]*this.t.safe_radius;next[2]=l.pos[2]+dir[1]*this.t.safe_radius;}
       if(this.night===3&&Math.hypot(next[0],next[2])<2&&s.pos[1]>=6&&s.pos[1]<14)return;
       const before=this.ground(s.pos),after=this.ground(next);if(Number.isFinite(before)&&Number.isFinite(after)&&after>before+.3&&this.ramp(next)===null)return;
       if(Number.isFinite(after)&&Number.isFinite(before)&&Math.abs(after-before)<.3)next[1]+=after-before;
@@ -300,14 +358,14 @@
     }
     finish(state,reason) {
       this.state=state;
-      if(state==='won') this.score += Math.floor(this.remainingTicks/60)*this.t.score.per_second_left + this.player.flames*this.t.score.per_flame_left;
+      if(state==='won')this.score+=this.lanterns.filter(l=>l.lit).reduce((sum,l)=>sum+this.t.score.per_dawn_lantern+Math.floor(l.fuelUnits/60),0)+this.player.flames*this.t.score.per_flame_left;
       this.emit('game_over',{result:state,reason});
     }
     snapshot() {
       const p=this.player;
       return {type:'snapshot',tick:this.tick,sim_tick:this.simTick,state:this.state,night:this.night,wind:{active:this.wind.active,dir_deg:round(this.wind.dir_deg)},time_left_s:round(this.remainingTicks/60),score:this.score,
-        player:{pos:rounded(p.pos),vel:rounded(p.vel),grounded:p.grounded,invuln:p.invuln>0,dash_cd_s:round(p.dashCd/60),pulse_cd_s:round(p.pulseCd/60),charm_s:round(p.charm/60),flames:p.flames,carried:p.carried},
-        lanterns:this.lanterns.map(l=>({id:l.id,pos:rounded(l.pos),lit:l.lit,deposited:l.deposited})),
+        player:{pos:rounded(p.pos),vel:rounded(p.vel),grounded:p.grounded,invuln:p.invuln>0,dash_cd_s:round(p.dashCd/60),pulse_cd_s:round(p.pulseCd/60),charm_s:round(p.charm/60),flames:p.flames,carried:p.carried,capacity:this.capacity()},
+        lanterns:this.lanterns.map(l=>({id:l.id,pos:rounded(l.pos),lit:l.lit,deposited:l.deposited,fuel:this.fuel(l),ever_lit:l.ever_lit,relit_count:l.relit_count})),
         shades:this.shades.map(s=>({id:s.id,pos:rounded(s.pos),state:s.state})),motes_active:this.motes.length,
         motes:this.motes.map(m=>({id:m.id,pos:rounded(m.pos),kind:m.kind,ttl_s:m.ttl===null?null:round(m.ttl/60)})),
         drifters:this.drifters.map(d=>({id:d.id,pos:rounded(d.pos),state:d.state,stolen:d.stolen})),charms:this.charms.map(c=>({id:c.id,available:c.available,respawn_s:round(c.respawn/60)}))};

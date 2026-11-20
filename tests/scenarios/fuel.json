@@ -1,0 +1,9 @@
+[
+  {"name":"fuel-out","night":1,"ticks":60,"scenario":{"random_motes":false,"random_shades":false,"lanterns":[{"id":"L1","lit":true,"fuel":1,"deposited":10}]},"inputs":{},"events":["lantern_out"]},
+  {"name":"relight","night":1,"ticks":1,"scenario":{"random_motes":false,"random_shades":false,"player":{"carried":5},"lanterns":[{"id":"L1","pos":[0,0,0],"ever_lit":true}]},"inputs":{"frames":[{"tick":0,"interact":true}]},"events":["deposit","lantern_lit"]},
+  {"name":"refuel","night":1,"ticks":1,"scenario":{"random_motes":false,"random_shades":false,"player":{"carried":3},"lanterns":[{"id":"L1","pos":[0,0,0],"lit":true,"fuel":75}]},"inputs":{"frames":[{"tick":0,"interact":true}]},"events":["refuel"]},
+  {"name":"drain-stack","night":1,"ticks":60,"scenario":{"random_motes":false,"random_shades":false,"player":{"pos":[30,0,0]},"lanterns":[{"id":"L1","pos":[0,0,0],"lit":true,"fuel":20}],"shades":[{"id":"S1","pos":[1,0,0],"state":"drain","target_lantern_id":"L1"},{"id":"S2","pos":[-1,0,0],"state":"drain","target_lantern_id":"L1"}]},"inputs":{},"events":["fuel_drain"]},
+  {"name":"dawn-survival","night":1,"ticks":1,"scenario":{"random_motes":false,"random_shades":false,"time_left_s":0.016666666666666666,"lanterns":[{"id":"L1","lit":true,"fuel":60},{"id":"L2","lit":true,"fuel":60},{"id":"L3","lit":true,"fuel":60}]},"inputs":{},"events":["game_over"]},
+  {"name":"no-early-win","night":1,"ticks":60,"scenario":{"random_motes":false,"random_shades":false,"lanterns":[{"id":"L1","lit":true},{"id":"L2","lit":true},{"id":"L3","lit":true},{"id":"L4","lit":true},{"id":"L5","lit":true}]},"inputs":{},"events":[]},
+  {"name":"capacity-growth","night":1,"ticks":1,"scenario":{"random_motes":false,"random_shades":false,"player":{"successful_lights":5},"motes":[[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]]},"inputs":{},"events":["mote_picked"]}
+]

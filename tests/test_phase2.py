@@ -4,15 +4,14 @@ import unittest
 from test_contract import run, snaps, events, CONTRACT, T
 
 
-@unittest.skipUnless(CONTRACT['contract_version'] == '1.1', 'Phase 2 only')
 class PhaseTwo(unittest.TestCase):
     def test_standard_tuning(self):
         expected = dict(player_speed=6, carry_capacity=10, lantern_cost=10, pickup_radius=1,
                         interact_radius=2, pulse_cost=3, pulse_radius=5, flames=3, invuln_s=1.5,
                         hit_drop_ratio=.5, pulse_stun_s=2, pulse_push_m=4, pulse_cooldown_s=3,
                         safe_radius=6, shade_speed=4, shade_hit_radius=1, dash_speed=14,
-                        dash_duration_s=.2, dash_cooldown_s=1.5, night1_duration_s=300,
-                        night2_duration_s=330, night3_duration_s=360)
+                        dash_duration_s=.2, dash_cooldown_s=1.5, night1_duration_s=240,
+                        night2_duration_s=270, night3_duration_s=300)  # Ticket-03 replaces durations only.
         for k, v in expected.items():
             self.assertEqual(T[k], v, k)
 
@@ -92,7 +91,7 @@ class PhaseTwo(unittest.TestCase):
     def test_death_priority_and_win_at_dawn(self):
         lanterns = [{'id': 'L'+str(i), 'lit': True} for i in range(1, 6)]
         self.assertEqual(events(run(scenario={'lanterns': lanterns, 'player': {'flames': 0}}), 'game_over')[0]['data']['reason'], 'no_flames')
-        self.assertEqual(events(run(scenario={'lanterns': lanterns, 'time_left_s': 1/60}), 'game_over')[0]['data']['reason'], 'all_lit')
+        self.assertEqual(events(run(scenario={'lanterns': lanterns, 'time_left_s': 1/60}), 'game_over')[0]['data']['reason'], 'dawn_survived')
 
     def test_pause_freezes_counters_ttl_and_spawn(self):
         rows = run(241, scenario={'random_motes': True, 'player': {'invuln_ticks': 10, 'pulse_cd_ticks': 20},
@@ -217,7 +216,7 @@ class PhaseTwo(unittest.TestCase):
         rows = run(scenario={'player': {'carried': 10}, 'lanterns': [{'id': 'L1', 'pos': [0,0,0]}]},
                    frames=[{'tick': 0, 'pulse': True, 'interact': True}])
         self.assertEqual(events(rows, 'pulse'), [])
-        self.assertEqual(rows[-1]['score'], 200)
+        self.assertEqual(rows[-1]['score'], 150)  # Ticket-03: 10*5 + first-light 100.
 
     def test_spawn_drifter_schedule_and_cap(self):
         rows = run(3600, night=2, scenario={'random_drifters': True}, every=1200)

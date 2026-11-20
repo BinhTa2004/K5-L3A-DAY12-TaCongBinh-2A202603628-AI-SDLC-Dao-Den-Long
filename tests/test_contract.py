@@ -53,12 +53,13 @@ class PhaseOne(unittest.TestCase):
         self.assertEqual(snaps(rows)[-1]['lanterns'][0]['deposited'], 4)
         self.assertEqual(rows[-1]['score'], 4 * T['score']['per_mote'])
 
-    def test_lighting_and_winning(self):
+    def test_lighting_and_dawn_survival(self):
         lanterns = [{'id': 'L1', 'pos': [0, 0, 0]}] + [{'id': 'L'+str(i), 'lit': True} for i in range(2, 6)]
-        rows = run(20, scenario={'player': {'carried': 10}, 'lanterns': lanterns}, frames=[{'tick': 0, 'interact': True}])
+        # Ticket-03 replaces the early all-lit win: check lighting on the final tick instead.
+        rows = run(20, scenario={'player': {'carried': 10}, 'lanterns': lanterns, 'time_left_s': 1/60}, frames=[{'tick': 0, 'interact': True}])
         self.assertEqual(rows[-1]['state'], 'won')
         self.assertEqual(rows[-1]['ticks'], 1)
-        self.assertEqual(events(rows, 'game_over')[0]['data']['reason'], 'all_lit')
+        self.assertEqual(events(rows, 'game_over')[0]['data']['reason'], 'dawn_survived')
         self.assertEqual(events(rows, 'lantern_lit')[0]['tick'], 1)
 
     def test_scenario_has_no_rewards_or_events(self):
