@@ -4,7 +4,7 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0E1430"><title>Đảo Đèn Lồng · Mây và những đốm sáng</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23FFB347' d='M22 8h20v8H22zM14 20h36v30H14zM24 54h16v6H24z'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/web/style.css">
+  <link rel="stylesheet" href="/web/style.css"><link rel="stylesheet" href="/web/release.css">
 </head>
 <body>
   <canvas id="world" aria-label="Đảo Đèn Lồng — game 3D"></canvas>
@@ -17,6 +17,7 @@
       <p class="intro">Sương đen đã phủ khắp những hòn đảo.<br>Cùng Mây gom đom đóm, thắp lại đèn lồng<br>và tìm đường đưa ánh sáng trở về.</p>
       <button id="start" class="primary">Bắt đầu hành trình</button>
       <button id="menu-settings" class="quiet">Âm thanh & điều khiển</button>
+      <button id="menu-leaderboard" class="quiet">Bảng xếp hạng</button>
       <div class="legend"><span>W A S D <small>di chuyển</small></span><span>SPACE <small>nhảy</small></span><span>E <small>nạp ánh sáng</small></span><span>Q <small>tỏa sáng</small></span></div>
     </section>
     <section id="intro" class="screen centered" hidden>
@@ -32,23 +33,29 @@
     <section id="result" class="screen centered" hidden>
       <div id="result-tag" class="eyebrow"></div><h1 id="result-title"></h1><p id="result-message"></p>
       <div id="result-score"></div><button id="next" class="primary"></button><button id="result-menu" class="quiet">Về menu</button>
+      <form id="save-score" hidden><label for="player-name">Lưu hành trình · tên 3–12 ký tự</label><input id="player-name" name="name" minlength="3" maxlength="12" pattern="[A-Za-z0-9_]{3,12}" autocomplete="nickname" required><button id="score-submit" type="submit" class="primary">Lưu điểm</button><p id="score-status" role="status"></p></form>
     </section>
     <section id="settings" class="screen centered" hidden>
       <div class="eyebrow">THEO CÁCH CỦA BẠN</div><h1>Cài đặt</h1>
       <label>Âm lượng <output id="volume-value"></output><input id="volume" type="range" min="0" max="1" step="0.01"></label>
       <label>Độ nhạy chuột <output id="sensitivity-value"></output><input id="sensitivity" type="range" min="0.2" max="2" step="0.1"></label>
       <label class="toggle"><input id="colorblind" type="checkbox"> Bảng màu dễ phân biệt</label>
+      <label class="toggle"><input id="reduced-motion" type="checkbox"> Giảm chuyển động và chớp màn hình</label>
+      <label class="toggle"><input id="large-text" type="checkbox"> Chữ lớn ×1.25</label>
+      <div id="keybindings" aria-label="Đổi phím điều khiển"></div><p id="key-error" role="alert"></p><button id="reset-keys" class="quiet" type="button">Khôi phục mặc định</button>
       <p>Kéo chuột để xoay camera · Cuộn để thu phóng<br>WASD / phím mũi tên · Space nhảy · Shift lướt<br>E nạp ánh sáng · Q tỏa sáng · Esc / P tạm dừng</p>
       <button id="settings-back" class="primary">Xong</button>
     </section>
+    <section id="leaderboard" class="screen centered" hidden><div class="eyebrow">NHỮNG NGƯỜI GIỮ ÁNH SÁNG</div><h1>Bảng xếp hạng</h1><p id="leaderboard-status" role="status"></p><div class="table-scroll"><table><thead><tr><th>Tên</th><th>Điểm</th><th>Đêm thắng</th><th>Thời điểm</th><th>Seed</th></tr></thead><tbody id="leaderboard-body"></tbody></table></div><button id="leaderboard-back" class="primary">Về menu</button></section>
   </main>
   <div id="hud" hidden>
     <div class="hud-top"><div class="panel flames"><small>NGỌN LỬA</small><strong id="flames"></strong><span id="night-name"></span></div><div class="panel clock"><small>TRƯỚC BÌNH MINH</small><strong id="clock">05:00</strong></div><div class="panel progress"><small>ÁNH SÁNG TRỞ VỀ</small><strong id="lantern-count"></strong><span id="score"></span></div></div>
     <div id="mission">Giữ đảo sáng tới bình minh</div><div id="wind" hidden>❧ Gió đang nổi lên…</div><div id="compass" hidden><span>➤</span><small id="compass-distance"></small></div>
     <div id="interaction" hidden></div><div id="toast" role="status"></div>
+    <div id="subtitles" role="status" aria-live="polite"></div><div id="shade-warning" hidden><span>➤</span><strong>Bóng Mực xuất hiện</strong></div>
     <div class="hud-bottom"><div class="control-hint">WASD di chuyển · Kéo chuột xoay góc nhìn<br>SPACE nhảy · ESC tạm dừng</div><div class="inventory panel"><small>NHỮNG ĐỐM SÁNG</small><div id="slots"></div><span id="carry-label"></span><span id="charm-label"></span></div><div class="abilities"><div id="dash-ability" class="panel"><kbd>SHIFT</kbd><span>Lướt</span><strong id="dash-cd"></strong></div><div class="panel"><kbd>Q</kbd><span>Tỏa sáng · 3 đốm</span><strong id="pulse-cd"></strong></div></div></div>
     <button id="pause-button" aria-label="Tạm dừng">Ⅱ</button>
   </div>
   <div id="error" role="alert" hidden></div>
-  <script src="/src/core.js"></script><script type="module" src="/web/game.js"></script>
+  <script src="/src/core.js"></script><script src="/web/accessibility.js"></script><script src="/src/benchmark.js"></script><script type="module" src="/web/game.js"></script>
 </body></html>

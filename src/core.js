@@ -384,5 +384,5 @@
     lines.push(JSON.stringify({type:'end',ticks:g.tick,state:g.state,score:g.score}));
     return lines.join('\n')+'\n';
   }
-  root.Lantern={Game,run,validateInputs,validateScenario,mapFor,DT,distance};
+  root.Lantern={Game,run,validateInputs,validateScenario,mapFor,DT,distance,random};
 })(globalThis);

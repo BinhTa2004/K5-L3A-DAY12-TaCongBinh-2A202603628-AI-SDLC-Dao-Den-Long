@@ -9,7 +9,7 @@ def lit(count, fuel=100):
 
 class PhaseThree(unittest.TestCase):
     def test_version_and_standard_constants(self):
-        self.assertEqual(CONTRACT['contract_version'], '1.2')
+        self.assertEqual(CONTRACT['contract_version'], '1.3')  # Ticket-04 extends the unchanged fuel contract.
         for key, value in dict(fuel_max=100, fuel_decay_per_s=1, fuel_per_mote=10, relight_cost=5,
                                win_ratio=.6, drain_per_s=5, low_fuel_threshold=30, capacity_max=20).items():
             self.assertEqual(T[key], value)
